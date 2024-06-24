@@ -2,7 +2,8 @@
 
 pacman::p_load(here,
                tidyverse,
-               janitor)
+               janitor,
+               rstan)
 
 # DATA
 
@@ -13,16 +14,17 @@ south_africa_covid_19 <- WHO_COVID_19_global_data %>%
   filter(Country == "South Africa") %>% 
   select(Date_reported, Country_code, New_cases, Cumulative_cases)
 
-describe(south_africa_covid_19)
+
 
 
 ## NICD data
 
-province_data <- read_csv(here("data/province_data.csv"))
+province_data_raw <- read_csv(here("data/province_data.csv")) %>% 
+  clean_names()
 
 require(data.table)
 
-setDT(province_data)
+province_data <- setDT(province_data_raw)
 
 province_data[
   order(date),
