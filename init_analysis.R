@@ -1,3 +1,6 @@
+install.packages("EpiNow2")
+
+
 #packages
 
 pacman::p_load(here,
@@ -8,7 +11,7 @@ pacman::p_load(here,
                data.table,
                scoringutils
                )
-
+# 
 # DATA
 
 # WHO data
@@ -19,7 +22,6 @@ south_africa_covid_19 <- WHO_COVID_19_global_data %>%
   select(Date_reported, Country_code, New_cases, Cumulative_cases)
 
 # describe(south_africa_covid_19)
-
 
 ## NICD data
 
@@ -141,6 +143,5 @@ score_summary <- summarise_scores(scores)
 # Print the score summary
 print(score_summary)
 
-data(example_quantile)
 
-sq <- sum(squared_error(data$actual_cases, data$median))
+#sq <- sum(squared_error(data$actual_cases, data$median))
