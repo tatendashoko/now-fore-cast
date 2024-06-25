@@ -1,5 +1,4 @@
 #packages
-
 pacman::p_load(here,
                rstan,
                tidyverse,
@@ -38,9 +37,9 @@ province_data[
   by = province_id
 ]
 
-(province_data[province_id != "U"] |> ggplot()) + aes(date, incidence, color = province_id) +
-  geom_line() +
-  scale_x_date() + scale_y_log10() + theme_minimal()
+# (province_data[province_id != "U"] |> ggplot()) + aes(date, incidence, color = province_id) +
+#   geom_line() +
+#   scale_x_date() + scale_y_log10() + theme_minimal()
 
 # province_data_filtered <- select(province_data, c('date', 'province', 'incidence', 'cumulative_cases'))
 # reported_cases <- select(province_data_filtered[1:60], c("date"="Date", "incidence"="Cases"))
@@ -143,4 +142,4 @@ print(score_summary)
 
 data(example_quantile)
 
-sq <- sum(squared_error(data$actual_cases, data$median))
+crps_sample(data$actual_cases, data$median)
