@@ -17,21 +17,21 @@ options(mc.cores=4)
 
 ## NICD data
 
-province_data <- read_csv(here("data/province_data.csv"))
+# province_data <- read_csv(here("data/province_data.csv"))
 
 require(data.table)
 library("EpiNow2")
 library("rstan")
 library("scoringutils")
 
-setDT(province_data)
+# setDT(province_data)
 options(mc.cores = 4)
 
-province_data[
-  order(date),
-  incidence := c(cumulative_cases[1], diff(cumulative_cases)),
-  by = province_id
-]
+# province_data[
+#   order(date),
+#   incidence := c(cumulative_cases[1], diff(cumulative_cases)),
+#   by = province_id
+# ]
 
 province_data_filtered <- province_data %>%
   filter(province != "unknown") %>%
@@ -55,7 +55,7 @@ reported_province_cases <- function(province_name, start_day=1, end_day){
   return(cases)
 }
 
-reported_eastern_cape_cases <- reported_province_cases("Eastern Cape", end_day = 60)
+reported_eastern_cape_cases <- reported_province_cases("Northern Cape", end_day = 60)
 
 def <- epinow(reported_eastern_cape_cases,
   generation_time = generation_time_opts(generation_time),
@@ -64,7 +64,7 @@ def <- epinow(reported_eastern_cape_cases,
   horizon = 14,
 )
 
-actual_eastern_cape_cases <- reported_province_cases("Eastern Cape", end_day = 60+14)
+actual_eastern_cape_cases <- reported_province_cases("Northern Cape", end_day = 60+14)
 
 # plot(def)
 
