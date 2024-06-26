@@ -9,11 +9,11 @@ source(glue("{path}/main/model_forcasting.R"))
 options(mc.cores=4)
 
 # Define the pipeline function
-pipeline <- function(province_name="Eastern Cape", province_data_filtered ,pred_size=60, pred_window=14, type= "daily") {
+pipeline <- function(province_data, pred_size=60, pred_window=14, type= "daily") {
     # Filter data for the specified province
-    data <- province_data_filtered %>%
-        filter(province == province_name) 
-    
+   
+    data <- province_data
+        
     data_length <- length(data$date)
     slide_slack <- as.integer(data_length - pred_size)
 
@@ -30,8 +30,8 @@ pipeline <- function(province_name="Eastern Cape", province_data_filtered ,pred_
         print(glue(">>>>>>>>>> Slider {x} >>>>>>>>>>>>>>>>>>>>>>>>>>"))
 
         # Add actual cases to forecast data
-        reported_cases <- reported_province_cases(province_name, start_day = x, end_day = as.integer(x + pred_size), type = type)
-        actual_cases <- reported_province_cases(province_name, start_day = x, end_day = as.integer(x + pred_size + pred_window), type = type)
+        reported_cases <- reported_province_cases(province_data, start_day = x, end_day = as.integer(x + pred_size), type = type)
+        actual_cases <- reported_province_cases(province_data, start_day = x, end_day = as.integer(x + pred_size + pred_window), type = "daily")
 
         # Check the slide interval
         if (!is.null(previous_slide_end)) {
@@ -48,11 +48,12 @@ pipeline <- function(province_name="Eastern Cape", province_data_filtered ,pred_
         #               delays = delay_opts(delay),
         #               rt = rt_opts(prior = rt_prior),
         #               horizon = pred_window)
-
-        def <- model(reported_cases,daily_generation_time, daily_delay, rt_prior, pred_window )
+        if (type == "daily") def <- model(reported_cases, daily_generation_time, daily_delay, rt_prior, pred_window)
+        else def <- model(reported_cases, weekly_generation_time, weekly_delay, rt_prior, pred_window)
 
         data <- summary(def, output = "estimated_reported_cases")
         data[, date := as.Date(date)]
+        setDT(actual_cases)
         actual_cases[, date := as.Date(date)]
 
         data[actual_cases, on = "date", actual_cases := i.confirm]
@@ -66,19 +67,16 @@ pipeline <- function(province_name="Eastern Cape", province_data_filtered ,pred_
 
 # Initialize the script and store the results
 province_simulation <- list()
+weekly_province_simulation <- list()
 #simulation of each province
 for (province in provinces){
-# print(glue("---------------------------- Simulation for {province}---------------------------------"))
-# result <- pipeline(province_name = as.character(province),province_data_filtered  ,pred_size=100, pred_window=20)
+print(glue("---------------------------- Simulation for {province}---------------------------------"))
+# result <- pipeline(get(gsub(" ", "_", province)), pred_size=100, pred_window=20)
 # province_simulation[[as.character(province)]] <- result
 
 # Weekly simulations
-province_variable <- paste0(gsub(" ", "_", "Eastern Cape"), "_weekly_incidence")
+province_variable <- paste0(gsub(" ", "_", province), "_weekly_incidence")
 weekly_dataset <- get(province_variable)
-weekly_result <- pipeline(province_name = as.character(province),weekly_dataset  ,pred_size=100, pred_window=20)
-
+weekly_result <- pipeline(weekly_dataset, pred_size=100, pred_window=20, type="weekly")
+weekly_province_simulation[[as.character(province)]] <- weekly_result
 }
-
-
-
-
