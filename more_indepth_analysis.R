@@ -37,13 +37,13 @@ reported_province_cases <- function(df, start_day=1, end_day){
   return(cases)
 }
 
-reported_eastern_cape_cases <- reported_province_cases(eastern_province_data, start_day = 14, end_day = 14+60)
+reported_eastern_cape_cases <- reported_province_cases(eastern_province_data, start_day = 1, end_day = 60)
 
 obs_stuff <- obs_opts(
   family = c("negbin", "poisson"),
   phi = list(mean = 0, sd = 1),
   weight = 1,
-  week_effect = TRUE,
+  week_effect = FALSE,
   week_length = 7,
   scale = 1,
   na = "accumulate",
@@ -73,7 +73,7 @@ weekly_def <- epinow(reported_eastern_cape_cases,
   # stan = sampling_stuff
 )
 # plot(weekly_def)
-actual_eastern_cape_cases <- reported_province_cases(eastern_province_data, start_day = 14, end_day = 14+60+14)
+actual_eastern_cape_cases <- reported_province_cases(eastern_province_data, start_day = 1, end_day = 60+14)
 
 weekly_data <- summary(weekly_def, output = "estimated_reported_cases")
 # data <- summary(def, type = "parameters", params = "infections")
@@ -84,8 +84,7 @@ actual_eastern_cape_cases[, date := as.Date(date)]
 
 # Add actual cases to forecast data
 weekly_data[actual_eastern_cape_cases, on = "date", actual_cases := i.confirm]
-data <- weekly_data
-ggplot(data, aes(x = date)) +
+ggplot(weekly_data, aes(x = date)) +
   # Shaded area for 90% confidence interval
   geom_ribbon(aes(ymin = lower_90, ymax = upper_90, fill = "90% CI"), alpha = 0.2) +
   # Shaded area for 50% confidence interval
@@ -106,7 +105,7 @@ ggplot(data, aes(x = date)) +
   # scale_y_log10() +
   theme(legend.position = "bottom")
 
-forecast_long <- melt(data, id.vars = c("date", "actual_cases"), 
+forecast_long <- melt(weekly_data, id.vars = c("date", "actual_cases"), 
                     measure.vars = c("median", "lower_20", "lower_50", "lower_90", "upper_20", "upper_50", "upper_90"), 
                     variable.name = "type", value.name = "value")
 
@@ -125,17 +124,12 @@ forecast_long[, model := "weekly"]
 forecast_long <- forecast_long[!is.na(quantile)]
 
 # Evaluate the forecasts
-weekly_scored <- select(forecast_long, c("date", "quantile", "prediction", "true_value", "model"))
-total_scored <- rbind(daily_scored, weekly_scored)
+weekly_forecast <- select(forecast_long, c("date", "quantile", "prediction", "true_value", "model"))
+total_forecast <- rbind(weekly_forecast, weekly_scored)
 scores <- score(total_scored, metrics = NULL)
-
-score(forecast_data)
 
 # Summarize the scores
 score_summary <- summarise_scores(scores, by = "model", relative_skill = TRUE, relative_skill_metric = "interval_score")
-
-## Print the score summary
-print(score_summary)
 
 pairwise <- pairwise_comparison(scores, by = "model", metric = "interval_score")
 
@@ -154,7 +148,7 @@ plot_wis(scores, x = "model", relative_contributions = TRUE, flip = FALSE)
 plot_score_table(scores, y = "model", by = NULL, metrics = NULL)
 
 # Scoring Using CRPS
-forecast_data <- select(def[["estimates"]][["samples"]], c("date", "sample", "value"))
+forecast_data <- select(weekly_def[["estimates"]][["samples"]], c("date", "sample", "value"))
 
 forecast_data[actual_eastern_cape_cases, on = "date", actual_cases := i.confirm]
 forecast_data[, model := "weekly"]
@@ -164,13 +158,37 @@ forecast_data <- forecast_data[sample > 250] %>%
 
 forecaster <- forecast_data %>%
              group_by(date, sample) %>%
-             summarize(prediction = mean(prediction, na.rm = TRUE), .groups = 'drop') %>%
+             summarize(prediction = mean(prediction, na.rm = TRUE), .groups = 'drop')
           
 setDT(forecaster)
 forecaster[actual_eastern_cape_cases, on = "date", true_value := i.confirm]
 forecaster[, model := "weekly"] 
 
-forecaster <- forecaster %>% filter(true_value != " Invalid Number") %>% select(-rn)
+forecaster <- forecaster %>% filter(true_value != "Invalid Number") %>% select(-rn)
 
-weekly_scored <- score(forecaster)
-score_summary <- summarise_scores(weekly_scored)
+forecasted_weekly <- forecaster %>%
+    mutate(week = floor_date(as.Date(date), "week") + days(6)) %>%
+    group_by(week, sample) %>%
+    mutate(prediction = ifelse(date == max(date), sum(prediction, na.rm = TRUE), NA)) %>%
+    filter(true_value != "Invalid Number") %>%
+    ungroup() %>%
+    select(-week)
+
+forecasted_daily <- daily_forecaster %>%
+    mutate(week = floor_date(as.Date(date), "week") + days(6)) %>%
+    group_by(week, sample) %>%
+    mutate(prediction = ifelse(date == max(date), sum(prediction, na.rm = TRUE), NA)) %>%
+    mutate(true_value = ifelse(date == max(date), sum(true_value, na.rm = TRUE), NA)) %>%
+    filter(true_value != "Invalid Number") %>%
+    ungroup() %>%
+    select(-week)
+
+total_forecast <- rbind(forecasted_weekly, forecasted_daily)
+
+total_scored <- score(total_forecast, by="model")
+score_summary <- summarise_scores(total_scored)
+
+pairwise <- pairwise_comparison(total_scored, by = "model", metric = "crps")
+
+plot_pairwise_comparison(pairwise, type = "mean_scores_ratio") +
+  facet_wrap(~model)

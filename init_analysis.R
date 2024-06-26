@@ -109,10 +109,10 @@ setDT(forecaster)
 forecaster[actual_eastern_cape_cases, on = "date", true_value := i.confirm]
 forecaster[, model := "daily"] 
 
-forecaster <- forecaster %>% filter(true_value != " Invalid Number") %>% select(-rn)
+daily_forecaster <- forecaster %>% filter(true_value != " Invalid Number") %>% select(-rn)
 
-daily_scored <- score(forecaster)
-score_summary <- summarise_scores(daily_scores)
+daily_scored <- score(daily_forecaster)
+score_summary <- summarise_scores(daily_scored)
 
 # Scoring Using Quantiles
 forecast_long <- melt(data, id.vars = c("date", "actual_cases"), 
