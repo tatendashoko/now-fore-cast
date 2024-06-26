@@ -65,7 +65,7 @@ daily_generation_time <- Gamma(mean = 7.12, sd = 1.72, max=10) # https://www.ncb
 daily_reporting_delay <- LogNormal(mean = 2, sd = 1, max = 10)
 
 daily_delay <- daily_incubation_period + daily_reporting_delay
-daily_rt_prior <- list(mean = 3, sd = 0.1)
+rt_prior <- list(mean = 3, sd = 0.1)
 
 ## Weekly Parameters
 # converting days to weeks

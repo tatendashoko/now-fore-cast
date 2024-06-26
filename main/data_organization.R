@@ -6,6 +6,10 @@ library(lubridate)
 # Load your province data (assuming province_data is already loaded)
 # province_data <- fread("/mnt/data/province_data.csv")  # Uncomment and replace with actual path if needed
 
+province_data_filtered <- province_data %>%
+  filter(province != "Unknown") %>%
+  select(date, province, incidence, cumulative_cases)
+
 # Country aggregate data by weeks, ensuring the end of the week is reflected (Sunday)
 province_data_weekly <- province_data %>% 
   mutate(week = floor_date(as.Date(date), "week") + days(6)) %>%
@@ -26,7 +30,7 @@ province_data_filled <- province_data %>%
 
 # Weekly aggregated data by province
 provinces <- unique(province_data$province)
-provinces <- provinces[provinces != "unknown"]
+provinces <- provinces[provinces != "Unknown"]
 
 province_list <- c()
 
