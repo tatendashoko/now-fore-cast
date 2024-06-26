@@ -80,7 +80,7 @@ province_data_filled <- function(province_data) {
 
 # Weekly aggregated data by province
 provinces <- unique(province_data$province)
-provinces <- provinces[provinces != "unknown"]
+provinces <- provinces[provinces != "Unknown"]
 
 province_list <- c()
 
