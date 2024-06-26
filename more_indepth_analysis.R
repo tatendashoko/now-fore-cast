@@ -1,4 +1,4 @@
-eastern_province_data <- select(Eastern_Cape_weekly_incidence, c("date", "weekly_incidence"))
+eastern_province_data <- select(Northern_Cape_weekly_incidence, c("date", "weekly_incidence"))
 
 #packages
 

@@ -75,7 +75,7 @@ for (province in provinces){
 # Weekly simulations
 province_variable <- paste0(gsub(" ", "_", "Eastern Cape"), "_weekly_incidence")
 weekly_dataset <- get(province_variable)
-weekly_result <- pipeline(province_name = as.character(province),weekly_dataset  ,pred_size=100, pred_window=20)
+weekly_result <- pipeline(province_name = as.character(province), weekly_dataset, pred_size=100, pred_window=20)
 
 }
 
