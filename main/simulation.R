@@ -9,14 +9,17 @@ pacman::p_load(here,
                glue
                )
 
+path <- getwd()  # Check the current working directory
+
 # Source required scripts
-source("get_data.R")
-source("data_organization.R")
-source("model_forcasting.R")
+source(glue("{path}/main/get_data.R"))
+source(glue("{path}/main/data_organization.R"))
+source(glue("{path}/main/model_forcasting.R"))
+
 options(mc.cores=4)
 
 # Define the pipeline function
-pipeline <- function(province_name="Eastern Cape", pred_size=60, pred_window=14) {
+pipeline <- function(province_name="Eastern Cape", province_data_filtered ,pred_size=60, pred_window=14) {
 
     # Filter data for the specified province
     data <- province_data_filtered %>%
@@ -24,9 +27,11 @@ pipeline <- function(province_name="Eastern Cape", pred_size=60, pred_window=14)
     
     data_length <- length(data$date)
     slide_slack <- as.integer(data_length - pred_size)
-
+    print(slide_slack)
+    print(pred_window)
+    print(data_length)
     # Generate the sequence for sliding windows
-    slider <- seq(0, slide_slack, by = as.integer(pred_window ))[1:3]
+    slider <- seq(0, slide_slack, by=(as.integer(pred_window)))[1:3]
     
     # Initialize an empty list to store predictions
     prediction_list <- list()
@@ -51,11 +56,13 @@ pipeline <- function(province_name="Eastern Cape", pred_size=60, pred_window=14)
         }
         previous_slide_end <- as.integer(x)
 
-        def <- epinow(reported_cases,
-                      generation_time = generation_time_opts(generation_time),
-                      delays = delay_opts(delay),
-                      rt = rt_opts(prior = rt_prior),
-                      horizon = pred_window)
+        # def <- epinow(reported_cases,
+        #               generation_time = generation_time_opts(generation_time),
+        #               delays = delay_opts(delay),
+        #               rt = rt_opts(prior = rt_prior),
+        #               horizon = pred_window)
+
+        def <- model(reported_cases,daily_generation_time, daily_delay, rt_prior, pred_window )
 
         data <- summary(def, output = "estimated_reported_cases")
         data[, date := as.Date(date)]
@@ -71,13 +78,14 @@ pipeline <- function(province_name="Eastern Cape", pred_size=60, pred_window=14)
 }
 
 # Initialize the script and store the results
-provinces <- unique(province_data$province)
 province_simulation <- list()
-
 #simulation of each province
 for (province in provinces){
 print(glue("---------------------------- Simulation for {province}---------------------------------"))
 result <- pipeline(province_name = as.character(province) ,pred_size=100, pred_window=20)
 province_simulation[[as.character(province)]] <- result
 }
+
+
+
 

@@ -34,7 +34,7 @@ province_data[
 ]
 
 province_data_filtered <- province_data %>%
-  filter(province != "unknown") %>%
+  filter(province != "Unknown") %>%
   select(date, province, incidence, cumulative_cases)
 
 
