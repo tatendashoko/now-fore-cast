@@ -2,7 +2,6 @@ install.packages("EpiNow2")
 
 
 #packages
-
 pacman::p_load(here,
                rstan,
                tidyverse,
@@ -16,15 +15,6 @@ options(mc.cores=4)
 
 # DATA
 
-# WHO data
-WHO_COVID_19_global_data <- read_csv(here("data/WHO-COVID-19-global-data.csv")) #Global Covid data
-
-south_africa_covid_19 <- WHO_COVID_19_global_data %>% 
-  filter(Country == "South Africa") %>% 
-  select(Date_reported, Country_code, New_cases, Cumulative_cases)
-
-# describe(south_africa_covid_19)
-
 ## NICD data
 
 province_data <- read_csv(here("data/province_data.csv"))
@@ -35,6 +25,7 @@ library("rstan")
 library("scoringutils")
 
 setDT(province_data)
+options(mc.cores = 4)
 
 province_data[
   order(date),
@@ -42,24 +33,18 @@ province_data[
   by = province_id
 ]
 
-(province_data[province_id != "U"] |> ggplot()) + aes(date, incidence, color = province_id) +
-  geom_line() +
-  scale_x_date() + scale_y_log10() + theme_minimal()
-
-# province_data_filtered <- select(province_data, c('date', 'province', 'incidence', 'cumulative_cases'))
-# reported_cases <- select(province_data_filtered[1:60], c("date"="Date", "incidence"="Cases"))
-
 province_data_filtered <- province_data %>%
   filter(province != "unknown") %>%
   select(date, province, incidence, cumulative_cases)
 
 
 incubation_period <- LogNormal(mean = 5, sd = 1, max = 14)
-generation_time <- LogNormal(mean = 5.2, sd = 1.72, max = 10) # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7201952/
+# generation_time <- LogNormal(mean = 5.2, sd = 1.72, max = 10) # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7201952/
+generation_time <- Gamma(mean = 7.12, sd = 1.72, max=10) # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9837419/
 reporting_delay <- LogNormal(mean = 2, sd = 1, max = 10)
 
 delay <- incubation_period + reporting_delay
-rt_prior <- list(mean = 2, sd = 0.1)
+rt_prior <- list(mean = 3, sd = 0.1)
 
 reported_province_cases <- function(province_name, start_day=1, end_day){
   cases <- province_data_filtered %>%
@@ -81,16 +66,13 @@ def <- epinow(reported_eastern_cape_cases,
 
 actual_eastern_cape_cases <- reported_province_cases("Eastern Cape", end_day = 60+14)
 
-
-summary(def)
-get_elapsed_time(def$estimates$fit)
-plot(def)
+# plot(def)
 
 data <- summary(def, output = "estimated_reported_cases")
 # data <- summary(def, type = "parameters", params = "infections")
-# data['actual_cases'] <- actual_eastern_cape_cases['confirm']
 data[, date := as.Date(date)]
 actual_eastern_cape_cases[, date := as.Date(date)]
+
 
 # Add actual cases to forecast data
 data[actual_eastern_cape_cases, on = "date", actual_cases := i.confirm]
@@ -115,35 +97,53 @@ ggplot(data, aes(x = date)) +
   # scale_y_log10() +
   theme(legend.position = "bottom")
 
+# Scoring Using CRPS
+forecast_data <- select(def[["estimates"]][["samples"]], c("date", "sample", "value"))
+
+forecast_data[actual_eastern_cape_cases, on = "date", actual_cases := i.confirm]
+forecast_data[, model := "daily"]
+
+forecast_data <- forecast_data[sample > 250] %>%
+  rename(prediction = value, true_value = actual_cases)
+
+forecaster <- forecast_data %>%
+             group_by(date, sample) %>%
+             summarize(prediction = mean(prediction, na.rm = TRUE), .groups = 'drop') %>%
+          
+setDT(forecaster)
+forecaster[actual_eastern_cape_cases, on = "date", true_value := i.confirm]
+forecaster[, model := "daily"] 
+
+forecaster <- forecaster %>% filter(true_value != " Invalid Number") %>% select(-rn)
+
+daily_scored <- score(forecaster)
+score_summary <- summarise_scores(daily_scores)
+
+# Scoring Using Quantiles
 forecast_long <- melt(data, id.vars = c("date", "actual_cases"), 
                     measure.vars = c("median", "lower_20", "lower_50", "lower_90", "upper_20", "upper_50", "upper_90"), 
                     variable.name = "type", value.name = "value")
 
 forecast_long[, quantile := fifelse(type == "median", 0.5,
-                            fifelse(type == "lower_90", 0.1,
+                            fifelse(type == "lower_90", 0.05,
                             fifelse(type == "lower_50", 0.25,
                             fifelse(type == "lower_20", 0.4,
                             fifelse(type == "upper_20", 0.6,
                             fifelse(type == "upper_50", 0.75,
-                            fifelse(type == "upper_90", 0.9, NA_real_)))))))]
+                            fifelse(type == "upper_90", 0.95, NA_real_)))))))]
 forecast_long[, prediction := value]
 forecast_long[, true_value := actual_cases]
+forecast_long[, model := "daily"]
 
 # Filter out rows with NA quantile values if any
 forecast_long <- forecast_long[!is.na(quantile)]
 
-# Ensure the predictions are sorted correctly
-# setorder(forecast_long, date, quantile)
-
 # Evaluate the forecasts
-scored <- select(forecast_long, c("date", "quantile", "prediction", "true_value"))
-scores <- score(scored, metrics = NULL)
+daily_scored <- select(forecast_long, c("date", "quantile", "prediction", "true_value", "model"))
+daily_scores <- score(daily_scored, metrics = NULL)
 
 # Summarize the scores
-score_summary <- summarise_scores(scores)
+score_summary <- summarise_scores(daily_scores)
 
 # Print the score summary
 print(score_summary)
-
-
-#sq <- sum(squared_error(data$actual_cases, data$median))
