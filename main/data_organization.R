@@ -1,53 +1,51 @@
-#packages
+# Data with focus on major entry points
+# Load necessary libraries
+library(dplyr)
+library(lubridate)
 
-pacman::p_load(here,
-               rstan,
-               tidyverse,
-               janitor,
-               EpiNow2,
-               data.table,
-               scoringutils
-               )
+# Load your province data (assuming province_data is already loaded)
+# province_data <- fread("/mnt/data/province_data.csv")  # Uncomment and replace with actual path if needed
 
-options(mc.cores=4)
+# Country aggregate data by weeks, ensuring the end of the week is reflected (Sunday)
+province_data_weekly <- province_data %>% 
+  mutate(week = floor_date(as.Date(date), "week") + days(6)) %>%
+  group_by(week) %>%
+  summarise(weekly_incidence = sum(incidence, na.rm = TRUE))
 
-require(data.table)
-library("EpiNow2")
-library("rstan")
-library("scoringutils")
+# Weekly data ending on Friday
+province_data_weekly_friday <- province_data %>% 
+  mutate(week_ending_friday = floor_date(as.Date(date), "week") + days(4)) %>%
+  group_by(week_ending_friday) %>%
+  summarise(weekly_incidence_fri = sum(incidence, na.rm = TRUE))
 
-setDT(province_data)
+# Fill in NAs for the rest of the week
+province_data_filled <- province_data %>%
+  mutate(week = floor_date(as.Date(date), "week") + days(6)) %>%
+  group_by(week) %>%
+  mutate(weekly_incidence = ifelse(date == max(date), sum(incidence, na.rm = TRUE), NA))
 
-province_data[
-  order(date),
-  incidence := c(cumulative_cases[1], diff(cumulative_cases)),
-  by = province_id
-]
+# Weekly aggregated data by province
+provinces <- unique(province_data$province)
+provinces <- provinces[provinces != "unknown"]
 
-(province_data[province_id != "U"] |> ggplot()) + aes(date, incidence, color = province_id) +
-  geom_line() +
-  scale_x_date() + scale_y_log10() + theme_minimal()
+province_list <- c()
 
-# province_data_filtered <- select(province_data, c('date', 'province', 'incidence', 'cumulative_cases'))
-# reported_cases <- select(province_data_filtered[1:60], c("date"="Date", "incidence"="Cases"))
+for (province in provinces) {
+  province_list[[province]] <- province_data %>% filter(province == !!province)
+}
 
-province_data_filtered <- province_data %>%
-  filter(province != "unknown") %>%
-  select(date, province, incidence, cumulative_cases)
+# Calculate weekly incidence for each province and save the results
+weekly_incidence_list <- list()
 
-
-incubation_period <- LogNormal(mean = 5, sd = 1, max = 14)
-generation_time <- LogNormal(mean = 5.2, sd = 1.72, max = 10) # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7201952/
-reporting_delay <- LogNormal(mean = 2, sd = 1, max = 10)
-
-delay <- incubation_period + reporting_delay
-rt_prior <- list(mean = 2, sd = 0.1)
-
-reported_province_cases <- function(province_name, start_day=1, end_day){
-  cases <- province_data_filtered %>%
-    filter(province == province_name) %>%
-    slice(start_day:end_day) %>%
-    select(date, incidence) %>%
-    rename(confirm = incidence)
-  return(cases)
+for (province in provinces) {
+  province_data <- province_list[[province]]
+  
+  weekly_incidence <- province_data %>%
+    mutate(week = floor_date(as.Date(date), "week") + days(6)) %>%
+    group_by(week) %>%
+    mutate(weekly_incidence = ifelse(date == max(date), sum(incidence, na.rm = TRUE), NA))
+    
+  variable_name <- gsub(" ", "_", province)  # Replace spaces with underscores
+  
+  assign(paste0(variable_name, "_weekly_incidence"), weekly_incidence)
 }

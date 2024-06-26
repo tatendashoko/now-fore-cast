@@ -10,8 +10,9 @@ pacman::p_load(here,
                )
 
 # Source required scripts
-source(")
-source("init_analysis.R")
+source("get_data.R")
+source("data_organization.R")
+source("model_forcasting.R")
 options(mc.cores=4)
 
 # Define the pipeline function
