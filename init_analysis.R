@@ -1,17 +1,3 @@
-install.packages("EpiNow2")
-
-
-#packages
-pacman::p_load(here,
-               rstan,
-               tidyverse,
-               janitor,
-               EpiNow2,
-               data.table,
-               scoringutils
-               )
-
-options(mc.cores=4)
 
 # DATA
 
@@ -19,10 +5,6 @@ options(mc.cores=4)
 
 province_data <- read_csv(here("data/province_data.csv"))
 
-require(data.table)
-library("EpiNow2")
-library("rstan")
-library("scoringutils")
 
 setDT(province_data)
 options(mc.cores = 4)
