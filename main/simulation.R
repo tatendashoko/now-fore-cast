@@ -1,17 +1,7 @@
-# Load necessary packages
-pacman::p_load(here,
-               rstan,
-               tidyverse,
-               janitor,
-               EpiNow2,
-               data.table,
-               scoringutils,
-               glue
-               )
-
 path <- getwd()  # Check the current working directory
 
 # Source required scripts
+source(glue("{path}/dependencies.R"))
 source(glue("{path}/main/get_data.R"))
 source(glue("{path}/main/data_organization.R"))
 source(glue("{path}/main/model_forcasting.R"))
@@ -19,17 +9,14 @@ source(glue("{path}/main/model_forcasting.R"))
 options(mc.cores=4)
 
 # Define the pipeline function
-pipeline <- function(province_name="Eastern Cape", province_data_filtered ,pred_size=60, pred_window=14) {
-
+pipeline <- function(province_name="Eastern Cape", province_data_filtered ,pred_size=60, pred_window=14, type= "daily") {
     # Filter data for the specified province
     data <- province_data_filtered %>%
         filter(province == province_name) 
     
     data_length <- length(data$date)
     slide_slack <- as.integer(data_length - pred_size)
-    print(slide_slack)
-    print(pred_window)
-    print(data_length)
+
     # Generate the sequence for sliding windows
     slider <- seq(0, slide_slack, by=(as.integer(pred_window)))[1:3]
     
@@ -43,8 +30,8 @@ pipeline <- function(province_name="Eastern Cape", province_data_filtered ,pred_
         print(glue(">>>>>>>>>> Slider {x} >>>>>>>>>>>>>>>>>>>>>>>>>>"))
 
         # Add actual cases to forecast data
-        reported_cases <- reported_province_cases(province_name, start_day = x, end_day = as.integer(x + pred_size))
-        actual_cases <- reported_province_cases(province_name, start_day = x, end_day = as.integer(x + pred_size + pred_window))
+        reported_cases <- reported_province_cases(province_name, start_day = x, end_day = as.integer(x + pred_size), type = type)
+        actual_cases <- reported_province_cases(province_name, start_day = x, end_day = as.integer(x + pred_size + pred_window), type = type)
 
         # Check the slide interval
         if (!is.null(previous_slide_end)) {
@@ -81,9 +68,15 @@ pipeline <- function(province_name="Eastern Cape", province_data_filtered ,pred_
 province_simulation <- list()
 #simulation of each province
 for (province in provinces){
-print(glue("---------------------------- Simulation for {province}---------------------------------"))
-result <- pipeline(province_name = as.character(province) ,pred_size=100, pred_window=20)
-province_simulation[[as.character(province)]] <- result
+# print(glue("---------------------------- Simulation for {province}---------------------------------"))
+# result <- pipeline(province_name = as.character(province),province_data_filtered  ,pred_size=100, pred_window=20)
+# province_simulation[[as.character(province)]] <- result
+
+# Weekly simulations
+province_variable <- paste0(gsub(" ", "_", "Eastern Cape"), "_weekly_incidence")
+weekly_dataset <- get(province_variable)
+weekly_result <- pipeline(province_name = as.character(province),weekly_dataset  ,pred_size=100, pred_window=20)
+
 }
 
 

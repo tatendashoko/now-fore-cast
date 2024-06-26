@@ -1,25 +1,4 @@
-#packages
-pacman::p_load(here,
-               rstan,
-               tidyverse,
-               janitor,
-               EpiNow2,
-               data.table,
-               scoringutils
-               )
-
-options(mc.cores=4)
-
-# DATA
-
-## NICD data
-require(data.table)
-library("EpiNow2")
-library("rstan")
-library("scoringutils")
-
 setDT(province_data)
-options(mc.cores = 4)
 
 province_data[
   order(date),
@@ -27,11 +6,7 @@ province_data[
   by = province_id
 ]
 
-province_data_filtered <- province_data %>%
-  filter(province != "unknown") %>%
-  select(date, province, incidence, cumulative_cases)
-
-reported_province_cases <- function(province, start_day=1, type="daily"){
+reported_province_cases <- function(province, start_day=1, end_day, type="daily"){
   if(type == "daily"){
     cases <- province_data_filtered %>%
         filter(province == province) %>%
