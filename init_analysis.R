@@ -1,3 +1,6 @@
+install.packages("EpiNow2")
+
+
 #packages
 pacman::p_load(here,
                rstan,
@@ -7,6 +10,8 @@ pacman::p_load(here,
                data.table,
                scoringutils
                )
+
+options(mc.cores=4)
 
 # DATA
 
