@@ -7,16 +7,6 @@ pacman::p_load(here,
 
 # DATA
 
-#WHO data
-WHO_COVID_19_global_data <- read_csv(here("data/WHO-COVID-19-global-data.csv")) #Global Covid data
-
-south_africa_covid_19 <- WHO_COVID_19_global_data %>% 
-  filter(Country == "South Africa") %>% 
-  select(Date_reported, Country_code, New_cases, Cumulative_cases)
-
-
-
-
 ## NICD data
 
 province_data_raw <- read_csv(here("data/province_data.csv")) %>% 
