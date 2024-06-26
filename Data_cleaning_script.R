@@ -25,6 +25,3 @@ province_data[
 (province_data[province_id != "U"] |> ggplot()) + aes(date, incidence, color = province_id) +
   geom_line() +
   scale_x_date() + scale_y_log10() + theme_minimal()
-
-
-
