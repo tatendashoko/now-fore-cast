@@ -1,12 +1,3 @@
-# Data with focus on major entry points
-# Load necessary libraries
-library(dplyr)
-
-pacman::p_load(here,
-               tidyverse,
-               janitor,
-               rstan)
-
 # DATA
 
 ## NICD data
@@ -80,7 +71,7 @@ province_data_filled <- function(province_data) {
 
 # Weekly aggregated data by province
 provinces <- unique(province_data$province)
-provinces <- provinces[provinces != "unknown"]
+provinces <- provinces[provinces != "Unknown"]
 
 province_list <- c()
 
