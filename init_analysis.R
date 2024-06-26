@@ -11,7 +11,9 @@ pacman::p_load(here,
                data.table,
                scoringutils
                )
-# 
+
+options(mc.cores=4)
+
 # DATA
 
 # WHO data
