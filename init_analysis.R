@@ -9,12 +9,6 @@
 # setDT(province_data)
 options(mc.cores = 4)
 
-# province_data[
-#   order(date),
-#   incidence := c(cumulative_cases[1], diff(cumulative_cases)),
-#   by = province_id
-# ]
-
 province_data_filtered <- province_data %>%
   filter(province != "Unknown") %>%
   select(date, province, incidence, cumulative_cases)

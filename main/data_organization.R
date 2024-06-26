@@ -5,8 +5,6 @@
 province_data_raw <- read_csv(here("data/province_data.csv")) %>% 
   clean_names()
 
-require(data.table)
-
 province_data <- setDT(province_data_raw)
 
 
