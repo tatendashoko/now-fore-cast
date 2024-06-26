@@ -71,12 +71,13 @@ pipeline <- function(province_name="Eastern Cape", pred_size=60, pred_window=14)
 
 # Initialize the script and store the results
 provinces <- unique(province_data$province)
+provinces <- provinces[provinces != "Unknown"]
 province_simulation <- list()
 
 #simulation of each province
 for (province in provinces){
 print(glue("---------------------------- Simulation for {province}---------------------------------"))
-result <- pipeline(province_name = as.character(province) ,pred_size=100, pred_window=20)
+result <- pipeline(province_name = as.character(province), pred_size=100, pred_window=20)
 province_simulation[[as.character(province)]] <- result
 }
 
