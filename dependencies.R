@@ -12,7 +12,8 @@ pacman::p_load(here,
                EpiNow2,
                data.table,
                scoringutils,
-               data.table
+               data.table,
+               glue
 )
 
 # Set Global option
