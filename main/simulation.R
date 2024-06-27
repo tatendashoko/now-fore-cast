@@ -129,9 +129,9 @@ simulator <- function(province_name, type = "daily", no_of_slides=1) {
 # }
 
 #national daily simulation 
-# national_simulation <- pipeline(national_data, pred_size=70, pred_window=14, type="daily", no_of_slides=20)
-# saveRDS(get("national_simulation", envir = .GlobalEnv), "new_daily_national_simulation.Rds")
+national_daily_simulation <- pipeline(national_data, pred_size=70, pred_window=14, type="daily", no_of_slides=20)
+saveRDS(get("national_daily_simulation", envir = .GlobalEnv), "new_daily_national_simulation.Rds")
 
 #national weekly simulation
-national_simulation <- pipeline(weekly_national_data, pred_size=70, pred_window=14, type="weekly", no_of_slides=20)
-saveRDS(get("national_simulation", envir = .GlobalEnv), "new_daily_national_simulation.Rds")
+# national_simulation <- pipeline(weekly_national_data, pred_size=70, pred_window=14, type="weekly", no_of_slides=20)
+# saveRDS(get("national_simulation", envir = .GlobalEnv), "new_weekly_national_simulation.Rds")
