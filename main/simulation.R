@@ -116,14 +116,22 @@ simulator <- function(province_name, type = "daily", no_of_slides=1) {
     result <- pipeline(dataset, pred_size=70, pred_window=14, type=type, no_of_slides=no_of_slides)
 }
 
-for (province in provinces){
-# assign(paste0(gsub(" ", "_", province), "_daily_forecast"), 
-#         simulator(province, type = "daily", no_of_slides=20))
-# daily_province_simulation[[as.character(province)]] <- get(paste0(gsub(" ", "_", province), "_daily_forecast"))
-# saveRDS(get("daily_province_simulation", envir = .GlobalEnv), "new_daily_province_simulation.Rds")
+# for (province in provinces){
+# # assign(paste0(gsub(" ", "_", province), "_daily_forecast"), 
+# #         simulator(province, type = "daily", no_of_slides=20))
+# # daily_province_simulation[[as.character(province)]] <- get(paste0(gsub(" ", "_", province), "_daily_forecast"))
+# # saveRDS(get("daily_province_simulation", envir = .GlobalEnv), "new_daily_province_simulation.Rds")
 
-assign(paste0(gsub(" ", "_", province), "_weekly_forecast"), 
-        simulator(province, type = "weekly", no_of_slides=20))
-weekly_province_simulation[[as.character(province)]] <- get(paste0(gsub(" ", "_", province), "_weekly_forecast"))
-saveRDS(get("weekly_province_simulation", envir = .GlobalEnv), "new_weekly_province_simulation.Rds")
-}
+# assign(paste0(gsub(" ", "_", province), "_weekly_forecast"), 
+#         simulator(province, type = "weekly", no_of_slides=20))
+# weekly_province_simulation[[as.character(province)]] <- get(paste0(gsub(" ", "_", province), "_weekly_forecast"))
+# saveRDS(get("weekly_province_simulation", envir = .GlobalEnv), "new_weekly_province_simulation.Rds")
+# }
+
+#national daily simulation 
+# national_simulation <- pipeline(national_data, pred_size=70, pred_window=14, type="daily", no_of_slides=20)
+# saveRDS(get("national_simulation", envir = .GlobalEnv), "new_daily_national_simulation.Rds")
+
+#national weekly simulation
+national_simulation <- pipeline(weekly_national_data, pred_size=70, pred_window=14, type="weekly", no_of_slides=20)
+saveRDS(get("national_simulation", envir = .GlobalEnv), "new_daily_national_simulation.Rds")
