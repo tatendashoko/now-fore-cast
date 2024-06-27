@@ -10,28 +10,28 @@ require(data.table)
 province_data <- setDT(province_data_raw)
 
 
-correct_cumulative_cases <- function(cumulative_cases) {
-  corrected_cases <- cumulative_cases
-  n <- length(corrected_cases)
-  for (i in 2:(n-1)) {
-    if ((corrected_cases[i] < corrected_cases[i - 1] & (corrected_cases[i] < corrected_cases[i + 1]))) {
-      corrected_cases[i] <- corrected_cases[i - 1]
-    } else if ((corrected_cases[i] > corrected_cases[i - 1]) & (corrected_cases[i] > corrected_cases[i + 1])) {
-      corrected_cases[i] <- corrected_cases[i - 1]
-    }
-  }
-  # Handle the last element separately if needed
-  if (n > 1 && corrected_cases[n] < corrected_cases[n - 1]) {
-    corrected_cases[n] <- corrected_cases[n - 1]
-  }
-  return(corrected_cases)
-}
+# correct_cumulative_cases <- function(cumulative_cases) {
+#   corrected_cases <- cumulative_cases
+#   n <- length(corrected_cases)
+#   for (i in 2:(n-1)) {
+#     if ((corrected_cases[i] < corrected_cases[i - 1] & (corrected_cases[i] < corrected_cases[i + 1]))) {
+#       corrected_cases[i] <- corrected_cases[i - 1]
+#     } else if ((corrected_cases[i] > corrected_cases[i - 1]) & (corrected_cases[i] > corrected_cases[i + 1])) {
+#       corrected_cases[i] <- corrected_cases[i - 1]
+#     }
+#   }
+#   # Handle the last element separately if needed
+#   if (n > 1 && corrected_cases[n] < corrected_cases[n - 1]) {
+#     corrected_cases[n] <- corrected_cases[n - 1]
+#   }
+#   return(corrected_cases)
+# }
 
-# Apply the correction function
-province_data <- province_data %>%
-  group_by(province) %>%
-  mutate(cumulative_cases = correct_cumulative_cases(cumulative_cases)) %>%
-  ungroup()
+# # Apply the correction function
+# province_data <- province_data %>%
+#   group_by(province) %>%
+#   mutate(cumulative_cases = correct_cumulative_cases(cumulative_cases)) %>%
+#   ungroup()
 
 province_data <- setDT(province_data)
 province_data[

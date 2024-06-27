@@ -1,12 +1,3 @@
-#packages
-
-pacman::p_load(here,
-               tidyverse,
-               janitor,
-               rstan)
-
-
-
 ## NICD data
 
 province_data_raw <- read_csv(here("./data/province_data.csv")) %>% 

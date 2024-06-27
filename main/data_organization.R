@@ -9,10 +9,12 @@ province_data <- setDT(province_data_raw)
 
 
 correct_cumulative_cases <- function(cumulative_cases) {
-  corrected_cases <- cumulative_cases
+   corrected_cases <- cumulative_cases
   n <- length(corrected_cases)
   for (i in 2:(n-1)) {
-    if ((corrected_cases[i] < corrected_cases[i - 1] & (corrected_cases[i] < corrected_cases[i + 1]))) {
+    if ((corrected_cases[i - 1] > corrected_cases[i + 1]) & (corrected_cases[i] > corrected_cases[i - 1])){
+      corrected_cases[i+1] <- corrected_cases[i]
+    } else if ((corrected_cases[i] < corrected_cases[i - 1]) & (corrected_cases[i] < corrected_cases[i + 1])) {
       corrected_cases[i] <- corrected_cases[i - 1]
     } else if ((corrected_cases[i] > corrected_cases[i - 1]) & (corrected_cases[i] > corrected_cases[i + 1])) {
       corrected_cases[i] <- corrected_cases[i - 1]
@@ -70,6 +72,8 @@ province_data_filled <- function(province_data) {
 # Weekly aggregated data by province
 provinces <- unique(province_data$province)
 provinces <- provinces[provinces != "Unknown"]
+provinces <- provinces[provinces != "Northern Cape"]
+provinces <- provinces[provinces != "Eastern Cape"]
 
 province_list <- c()
 
@@ -85,3 +89,4 @@ for (province in provinces) {
   
   assign(paste0(variable_name, "_weekly_incidence"), weekly_incidence)
 }
+
