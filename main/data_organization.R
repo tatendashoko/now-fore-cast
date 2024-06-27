@@ -90,3 +90,26 @@ for (province in provinces) {
   assign(paste0(variable_name, "_weekly_incidence"), weekly_incidence)
 }
 
+national_data <- province_data %>%
+  filter(province != "Unknown") %>%
+  group_by(date) %>%
+  summarize(incidence = sum(incidence, na.rm = TRUE))
+
+weekly_aggregated_data <- province_data_filled(province_data) %>%
+  filter(province != "Unknown") %>%
+  mutate(date = floor_date(as.Date(date), "week") + days(6)) %>%
+  group_by(date) %>%
+  summarize(incidence = sum(incidence, na.rm = TRUE)) %>%
+  ungroup()
+
+# Find the start of the first week
+first_day <- floor_date(min(weekly_aggregated_data$date), "week")
+
+weekly_national_data <- weekly_aggregated_data %>%
+  complete(date = seq.Date((first_day + 1), max(date), by = "day")) %>%
+  mutate(weekly_incidence = if_else(wday(date) == 7, incidence, NA_real_))
+
+national_total_by_province <- province_data %>%
+  filter(province != "Unknown") %>%
+  group_by(province) %>%
+  summarize(incidence = sum(incidence, na.rm = TRUE))
