@@ -38,11 +38,16 @@ pipeline <- function(province_data, pred_size=60, pred_window=14, type="daily", 
         reported_cases <- reported_province_cases(province_data, start_day = x, end_day = as.integer(x + pred_size), type = type)
         reported_cases[, date := as.Date(date)]
         
+        first_non_na_index <- which(!is.na(reported_cases$confirm))[1]
+        # Check if the first non-NA value is 0
+        if (reported_cases$confirm[first_non_na_index] == 0) {
+        # Remove rows before the first non-NA value
+        reported_cases <- reported_cases[(first_non_na_index+1):nrow(reported_cases), ]
+}
         # prepend arbitrary value due to NAs
         # new_row <- data.table(date = as.Date(min(reported_cases$date) - 1), confirm = 0)
         # Bind the new row to the existing data frame
         # reported_cases <- rbindlist(list(new_row, reported_cases), use.names = TRUE, fill = TRUE)
-        
         actual_cases <- reported_province_cases(province_data, start_day = x, end_day = as.integer(x + pred_size + pred_window), type = "daily")
         actual_cases[, date := as.Date(date)]
 
@@ -100,7 +105,7 @@ pipeline <- function(province_data, pred_size=60, pred_window=14, type="daily", 
 daily_province_simulation <- list()
 weekly_province_simulation <- list()
 #simulation of each province
-# provinces <- ("Northern Cape")
+provinces <- ("Northern Cape")
 
 simulator <- function(province_name, type = "daily", no_of_slides=1) {
     print(glue("---------------------------- Simulation for {province}---------------------------------"))
@@ -111,13 +116,13 @@ simulator <- function(province_name, type = "daily", no_of_slides=1) {
 }
 
 for (province in provinces){
-assign(paste0(gsub(" ", "_", province), "_daily_forecast"), 
-        simulator(province, type = "daily", no_of_slides=20))
-daily_province_simulation[[as.character(province)]] <- get(paste0(gsub(" ", "_", province), "_daily_forecast"))
-saveRDS(get("daily_province_simulation", envir = .GlobalEnv), "new_daily_province_simulation.Rds")
+# assign(paste0(gsub(" ", "_", province), "_daily_forecast"), 
+#         simulator(province, type = "daily", no_of_slides=20))
+# daily_province_simulation[[as.character(province)]] <- get(paste0(gsub(" ", "_", province), "_daily_forecast"))
+# saveRDS(get("daily_province_simulation", envir = .GlobalEnv), "new_daily_province_simulation.Rds")
 
-# assign(paste0(gsub(" ", "_", province), "_weekly_forecast"), 
-#         simulator(province, type = "weekly", no_of_slides=3))
-# weekly_province_simulation[[as.character(province)]] <- get(paste0(gsub(" ", "_", province), "_weekly_forecast"))
-# saveRDS(get("weekly_province_simulation", envir = .GlobalEnv), "new_weekly_province_simulation.Rds")
+assign(paste0(gsub(" ", "_", province), "_weekly_forecast"), 
+        simulator(province, type = "weekly", no_of_slides=20))
+weekly_province_simulation[[as.character(province)]] <- get(paste0(gsub(" ", "_", province), "_weekly_forecast"))
+saveRDS(get("weekly_province_simulation", envir = .GlobalEnv), "new_weekly_province_simulation.Rds")
 }
