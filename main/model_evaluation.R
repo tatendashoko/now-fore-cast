@@ -30,6 +30,5 @@ plot_pairwise_comparison(pairwise, type = "mean_scores_ratio") +
 return(list(pairwise = pairwise, total_scored = total_scored))
 }
 
-results <- scorer(Eastern_Cape_daily_forecast$scoring, Eastern_Cape_weekly_forecast$scoring, mode="upscale")
-b <- results$pairwise
-c <- results$total_scored
+upscale_results <- scorer(swet$SouthAfrica_national$scoring, mainerset$SouthAfrica_national$scoring, mode="upscale")
+downscale_results <- scorer(swet$SouthAfrica_national$scoring, mainerset$SouthAfrica_national$scoring, mode="downscale")
