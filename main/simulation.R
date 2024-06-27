@@ -105,7 +105,8 @@ pipeline <- function(province_data, pred_size=60, pred_window=14, type="daily", 
 daily_province_simulation <- list()
 weekly_province_simulation <- list()
 #simulation of each province
-provinces <- ("Northern Cape")
+provinces <- c("Limpopo", "North West", "Mpumalanga", "Free State")
+
 
 simulator <- function(province_name, type = "daily", no_of_slides=1) {
     print(glue("---------------------------- Simulation for {province}---------------------------------"))

@@ -72,7 +72,7 @@ province_data_filled <- function(province_data) {
 # Weekly aggregated data by province
 provinces <- unique(province_data$province)
 provinces <- provinces[provinces != "Unknown"]
-# provinces <- provinces[provinces != "Northern Cape"]
+provinces <- provinces[provinces != "Northern Cape"]
 provinces <- provinces[provinces != "Eastern Cape"]
 
 province_list <- c()
