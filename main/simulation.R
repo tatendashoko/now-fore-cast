@@ -9,20 +9,38 @@ source(glue("{path}/main/forecast_data_selection.R"))
 
 options(mc.cores=4)
 
-# Define the pipeline function
-pipeline <- function(province_data, pred_size=60, pred_window=14, type="daily", no_of_slides=-1) {
-    # Filter data for the specified province
-   
-    data <- province_data
-        
-    data_length <- length(data$date)
-    slide_slack <- as.integer(data_length - pred_size)
+#' @title The pipeline function
+#' 
+#' @param province_data a data.frame that has ...
+#' 
+#' @param pred_size a positive integer; the number of days to use
+#' for training
+#' 
+#' @param pred_window a positive integer; the number of days to forecast
+#' 
+#' 
+pipeline <- function(
+  province_data, pred_size=70, pred_window=14, type = c("daily", "weekly"), 
+  no_of_slides=-1
+) {
+  
+  type <- match.arg(type)
+  
+  data_length <- length(province_data$date)
+  slide_slack <- as.integer(data_length - pred_size)
 
-    # Generate the sequence for sliding windows
-    if ((no_of_slides != -1) & (no_of_slides <= slide_slack)) slider <- seq(0, slide_slack, by=(as.integer(pred_window)))[1:no_of_slides]
-    else slider <- seq(0, slide_slack, by=(as.integer(pred_window)))
+  pred_window <- as.integer(pred_window)
     
-    # Initialize an empty list to store predictions
+  if (no_of_slides*pred_window > slide_slack) {
+    warning("Requested more slides than possible.")
+    no_of_slides <- -1
+  }
+  
+  # Generate the sequence for sliding windows
+  slider <- seq(0, slide_slack, by = pred_window)
+  if (no_of_slides > 0) slider <- slider[1:no_of_slides]
+    
+      # Initialize an empty list to store predictions
     prediction_list <- list()
     
     # Predict for each sliding window and store predictions in the list
@@ -41,14 +59,14 @@ pipeline <- function(province_data, pred_size=60, pred_window=14, type="daily", 
         first_non_na_index <- which(!is.na(reported_cases$confirm))[1]
         # Check if the first non-NA value is 0
         if (reported_cases$confirm[first_non_na_index] == 0) {
-        # Remove rows before the first non-NA value
-        reported_cases <- reported_cases[(first_non_na_index+1):nrow(reported_cases), ]
-}
+          # Remove rows before the first non-NA value
+          reported_cases <- reported_cases[(first_non_na_index+1):nrow(reported_cases), ]
+        }
         # prepend arbitrary value due to NAs
         # new_row <- data.table(date = as.Date(min(reported_cases$date) - 1), confirm = 0)
         # Bind the new row to the existing data frame
         # reported_cases <- rbindlist(list(new_row, reported_cases), use.names = TRUE, fill = TRUE)
-        actual_cases <- reported_province_cases(province_data, start_day = x, end_day = as.integer(x + pred_size + pred_window), type = "daily")
+        actual_cases <- reported_province_cases(province_data, start_day = x+pred_size+1, end_day = as.integer(x + pred_size + pred_window), type = "daily")
         actual_cases[, date := as.Date(date)]
 
         # Check the slide interval
@@ -62,6 +80,10 @@ pipeline <- function(province_data, pred_size=60, pred_window=14, type="daily", 
         previous_slide_end <- as.integer(x)
 
         def <- model(reported_cases, generation_time, delay, rt_prior, pred_window)
+        # est_dt <- def$estimated_reported_cases$samples[sample > 250][date > max(date)-pred_window]
+        # setnames(est_dt, "cases", "prediction")
+        # est_dt[actual_cases, on = .(date), true_value := confirm]
+        
         data <- summary(def, output = "estimated_reported_cases")
         data[, date := as.Date(date)]
         data[actual_cases, on = "date", true_value := i.confirm]
