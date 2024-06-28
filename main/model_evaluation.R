@@ -32,3 +32,27 @@ return(list(pairwise = pairwise, total_scored = total_scored))
 
 upscale_results <- scorer(swet$SouthAfrica_national$scoring, mainerset$SouthAfrica_national$scoring, mode="upscale")
 downscale_results <- scorer(swet$SouthAfrica_national$scoring, mainerset$SouthAfrica_national$scoring, mode="downscale")
+
+extract_crps <- function(score_df, type){
+  actual_df <- score_df %>%
+    filter(model == type) %>%
+    # mutate(crps = if(type == "weekly") crps/14 else crps/2) %>%
+    select(date, crps)
+  return(actual_df)
+}
+
+weekly_weekly_crps <- extract_crps(downscale_results$total_scored, "weekly") 
+daily_weekly_crps <- extract_crps(downscale_results$total_scored, "daily")
+weekly_daily_crps <- extract_crps(upscale_results$total_scored, "weekly")
+daily_daily_crps <- extract_crps(upscale_results$total_scored, "daily")
+
+names(weekly_weekly_crps)[2] <- "weekly_weekly_crps"
+names(daily_weekly_crps)[2] <- "daily_weekly_crps"
+names(weekly_daily_crps)[2] <- "weekly_daily_crps"
+names(daily_daily_crps)[2] <- "daily_daily_crps"
+
+merged_crps <- weekly_weekly_crps %>%
+  full_join(daily_weekly_crps, by = "date") %>%
+  full_join(weekly_daily_crps, by = "date") %>%
+  full_join(daily_daily_crps, by = "date") %>%
+  full_join(select(mainerset$SouthAfrica$forecast, c("date", "true_value")), by="date")
