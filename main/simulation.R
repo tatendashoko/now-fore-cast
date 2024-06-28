@@ -75,8 +75,6 @@ pipeline <- function(province_data, pred_size=60, pred_window=14, type="daily", 
         forecast_data <- forecast_data[sample > 250] %>%
             rename(prediction = value)
 
-        
-
         combined_chains_forecast_data <- forecast_data %>%
                     group_by(date, sample) %>%
                     summarize(prediction = mean(prediction, na.rm = TRUE), .groups = 'drop')

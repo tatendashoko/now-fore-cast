@@ -101,60 +101,36 @@ national_multiforecast_plotter <- function(df1, df2){
 
 # national_multiforecast_plotter(mainerset$SouthAfrica_national$forecast, mainerset$SouthAfrica$forecast)
 
-
-extract_crps <- function(score_df, type){
-  actual_df <- score_df %>%
-    filter(model == type) %>%
-    select(date, crps)
-  return(actual_df)
-}
-
-weekly_weekly_crps <- extract_crps(downscale_results$total_scored, "weekly")
-daily_weekly_crps <- extract_crps(downscale_results$total_scored, "daily")
-weekly_daily_crps <- extract_crps(upscale_results$total_scored, "weekly")
-daily_daily_crps <- extract_crps(upscale_results$total_scored, "daily")
-
-names(weekly_weekly_crps)[2] <- "weekly_weekly_crps"
-names(daily_weekly_crps)[2] <- "daily_weekly_crps"
-names(weekly_daily_crps)[2] <- "weekly_daily_crps"
-names(daily_daily_crps)[2] <- "daily_daily_crps"
-
-merged_crps <- weekly_weekly_crps %>%
-  full_join(daily_weekly_crps, by = "date") %>%
-  full_join(weekly_daily_crps, by = "date") %>%
-  full_join(daily_daily_crps, by = "date") %>%
-  full_join(select(mainerset$SouthAfrica$forecast, c("date", "true_value")), by="date")
-
 crps_plotter <- function(score_df) {
   coeff <- 2
   
   # Filter out NA values for each line individually
-  score_df_filtered_red <- score_df %>% filter(!is.na(weekly_daily_crps))
+  score_df_filtered_red <- score_df %>% filter(!is.na(weekly_daily_crps)) 
   score_df_filtered_blue <- score_df %>% filter(!is.na(weekly_weekly_crps))
   score_df_filtered_green <- score_df %>% filter(!is.na(daily_daily_crps))
   score_df_filtered_yellow <- score_df %>% filter(!is.na(daily_weekly_crps))
   
   ggplot(score_df, aes(x = date)) +
-    
-    geom_line(aes(y = true_value), linetype = "dashed") +
+    geom_line(aes(y = true_value, color = "Actual Cases")) +
     geom_vline(xintercept = min(score_df$date) + 70, linetype = "dashed") +
-    geom_line(data = score_df_filtered_red, aes(y = weekly_daily_crps / coeff), color = "red") +
-    geom_line(data = score_df_filtered_blue, aes(y = weekly_weekly_crps / coeff), color = "blue") +
-    # geom_line(data = score_df_filtered_green, aes(y = daily_daily_crps / coeff), color = "green") +
-    # geom_line(data = score_df_filtered_yellow, aes(y = daily_weekly_crps / coeff), color = "yellow") +
+    geom_line(data = score_df_filtered_red, aes(y = weekly_daily_crps / coeff, color = "Weekly Daily CRPS"), linetype = "dashed") +
+    geom_line(data = score_df_filtered_blue, aes(y = weekly_weekly_crps / coeff, color = "Weekly Weekly CRPS"), linetype = "dashed", alpha = 0.5) +
+    geom_line(data = score_df_filtered_green, aes(y = daily_daily_crps / coeff, color = "Daily Daily CRPS"), linetype = "dashed") +
+    geom_line(data = score_df_filtered_yellow, aes(y = daily_weekly_crps / coeff, color = "Daily Weekly CRPS"), linetype = "dashed") +
     
     labs(title = "New Reports per Day",
          x = "Date",
-         y = "New reports per day") +
-    
+         y = "New reports per day",
+         color = "Legend") +
+    scale_color_manual(values = c("Actual Cases" = "black", "Weekly Daily CRPS" = "green", "Weekly Weekly CRPS" = "green", "Daily Daily CRPS" = "red", "Daily Weekly CRPS" = "blue")) +
     theme_minimal() +
     theme(legend.position = "bottom") +
+    # guides(color = guide_legend(override.aes = list(linetype = c("solid", "dashed", "dashed", "dashed", "dashed")))) +
     scale_y_continuous(
       name = "Actual Cases",
       sec.axis = sec_axis(~ . * coeff, name = "Continuous Ranked Probability Score (CRPS)"),
-      limits = c(0, 100000 / coeff)
+      limits = c(0, 80000 / coeff)
     )
-    # scale_y_log10()
 }
 
 # Example call to the function with your data
