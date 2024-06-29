@@ -12,3 +12,7 @@ data/raw.csv: | data
 
 data/intermediate.rds: R/import.R data/raw.csv
 	$(call R)
+
+# needs some tweaking, but basically right
+figures/incidence.png: R/fig_incidence.R data/intermediate.rds
+	$(call R)
