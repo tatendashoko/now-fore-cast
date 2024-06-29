@@ -13,6 +13,12 @@ data/raw.csv: | data
 data/intermediate.rds: R/import.R data/raw.csv
 	$(call R)
 
+data/daily_%.rds: R/extract.R data/intermediate.rds
+	$(call R,$* daily)
+
+data/weekly_%.rds: R/extract.R data/intermediate.rds
+	$(call R,$* weekly)
+
 # needs some tweaking, but basically right
 figures/incidence.png: R/fig_incidence.R data/intermediate.rds
 	$(call R)
