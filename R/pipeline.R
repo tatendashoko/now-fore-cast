@@ -1,83 +1,48 @@
-# Load necessary packages
-pacman::p_load(here,
-               rstan,
-               tidyverse,
-               janitor,
-               EpiNow2,
-               data.table,
-               scoringutils,
-               glue
-               )
 
-# Source required scripts
-source("init_analysis.R")
-source("data_chunks.R")
-options(mc.cores=4)
+library(EpiNow2)
+library(data.table)
+library(parallel)
 
-# Define the pipeline function
-pipeline <- function(province_name="Eastern Cape", pred_size=60, pred_window=14) {
+.args <- if (interactive()) c(
+  "data/daily_EC.rds",
+  "output/forecast_daily_EC.rds"
+) else commandArgs(trailingOnly = TRUE)
 
-    # Filter data for the specified province
-    data <- province_data_filtered %>%
-        filter(province == province_name) 
-    
-    data_length <- length(data$date)
-    slide_slack <- as.integer(data_length - pred_size)
+options(mc.cores = detectCores()-1L)
 
-    # Generate the sequence for sliding windows
-    slider <- seq(0, slide_slack, by = as.integer(pred_window ))[1:3]
-    
-    # Initialize an empty list to store predictions
-    prediction_list <- list()
-    
-    # Predict for each sliding window and store predictions in the list
-    previous_slide_end <- NULL
+dt <- readRDS(.args[1])[, .(date, confirm)]
 
-    for (x in slider) {
-        print(glue(">>>>>>>>>> Slider {x} >>>>>>>>>>>>>>>>>>>>>>>>>>"))
+train_window <- 7*10
+test_window <- 7*2
 
-        # Add actual cases to forecast data
-        reported_cases <- reported_province_cases(province_name, start_day = x, end_day = as.integer(x + pred_size))
-        actual_cases <- reported_province_cases(province_name, start_day = x, end_day = as.integer(x + pred_size + pred_window))
+slides <- seq(0, dt[, .N - (train_window + test_window)], by = test_window)
 
-        # Check the slide interval
-        if (!is.null(previous_slide_end)) {
-            slide_interval <- as.integer(x) - previous_slide_end
-            if (slide_interval != pred_window) {
-                print(glue("Error: Slide interval is not {pred_window} days"))
-                next 
-            }
-        }
-        previous_slide_end <- as.integer(x)
+incubation_period <- LogNormal(mean = 5, sd = 1, max = 14)
+# generation_time <- LogNormal(mean = 5.2, sd = 1.72, max = 10) # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7201952/
+generation_time <- Gamma(mean = 7.12, sd = 1.72, max=10) # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9837419/
+reporting_delay <- LogNormal(mean = 2, sd = 1, max = 10)
+delay <- incubation_period + reporting_delay
+rt_prior <- list(mean = 3, sd = 0.1)
 
-        def <- epinow(reported_cases,
-                      generation_time = generation_time_opts(generation_time),
-                      delays = delay_opts(delay),
-                      rt = rt_opts(prior = rt_prior),
-                      horizon = pred_window)
+obs <- obs_opts(
+  family = c("negbin", "poisson"),
+  phi = list(mean = 0, sd = 1),
+  weight = 1,
+  week_effect = FALSE,
+  week_length = 7,
+  scale = 1,
+  na = "accumulate",
+  likelihood = TRUE,
+  return_likelihood = FALSE
+)
 
-        data <- summary(def, output = "estimated_reported_cases")
-        data[, date := as.Date(date)]
-        actual_cases[, date := as.Date(date)]
+res_dt <- lapply(slides, \(slide) {
+  epinow(
+    data = dt[(1:train_window)+slide],
+    generation_time = generation_time_opts(generation_time),
+    delays = delay_opts(delay), rt = rt_opts(prior = rt_prior),
+    horizon = test_window, obs = obs, logs = NULL
+  )$estimates$samples[variable == "reported_cases" & type == "forecast", .(date, sample, value, slide = slide)]
+}) |> rbindlist()
 
-        data[actual_cases, on = "date", actual_cases := i.confirm]
-
-        # Store the result in the list
-        prediction_list[[as.character(x)]] <- data
-    }
-    
-    return(prediction_list)
-}
-
-# Initialize the script and store the results
-provinces <- unique(province_data$province)
-provinces <- provinces[provinces != "Unknown"]
-province_simulation <- list()
-
-#simulation of each province
-for (province in provinces){
-print(glue("---------------------------- Simulation for {province}---------------------------------"))
-result <- pipeline(province_name = as.character(province), pred_size=100, pred_window=20)
-province_simulation[[as.character(province)]] <- result
-}
-
+res_dt |> saveRDS(tail(.args, 1))

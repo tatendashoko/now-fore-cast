@@ -15,7 +15,7 @@ long_dt <- raw_dt |> melt.data.table(id.vars = "date", variable.name = "province
 
 long_dt[
   order(date),
-  daily_incidence := c(cumulative_incidence[1], diff(cumulative_incidence)),
+  confirm := c(cumulative_incidence[1], diff(cumulative_incidence)),
   by = province
 ]
 
@@ -23,5 +23,5 @@ complete_dt <- long_dt[, CJ(province = unique(province), date = as.IDate(min(dat
 
 merge(
   complete_dt, long_dt, by = c("province", "date"), all = TRUE
-)[, .(province, date, daily_incidence)] |> saveRDS(tail(.args, 1))
+)[, .(province, date, confirm)] |> saveRDS(tail(.args, 1))
 

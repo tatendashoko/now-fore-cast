@@ -9,6 +9,9 @@ data:
 figures:
 	mkdir -p $@
 
+output:
+	mkdir -p $@
+
 # TODO: wget this instead
 data/raw.csv: | data
 	mv ~/Downloads/covid19za_provincial_cumulative_timeline_confirmed.csv $@
@@ -37,3 +40,8 @@ figures/daily_vs_weekly_%.png: R/fig_daily_vs_weekly.R data/daily_%.rds data/wee
 	$(call R)
 
 alldvswfigs: $(patsubst %,figures/daily_vs_weekly_%.png,${PROVINCES})
+
+results/forecast_%.rds: R/pipeline.R data/%.rds
+	$(call R)
+
+allforecasts: $(patsubst %,results/forecast_daily_%.rds,${PROVINCES}) $(patsubst %,results/forecast_weekly_%.rds,${PROVINCES})
