@@ -9,7 +9,7 @@ library(ggplot2)
 
 dt <- readRDS(.args[1])
 
-p <- ggplot(dt) + aes(date, daily_incidence, color = province) +
+p <- ggplot(dt) + aes(date, confirm, color = province) +
   geom_line() +
   scale_y_continuous("Daily Incidence", transform = "log2") +
   scale_x_date(NULL, date_breaks = "month", date_labels = "%b '%y") +
