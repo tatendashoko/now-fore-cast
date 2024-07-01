@@ -36,12 +36,16 @@ obs <- obs_opts(
   return_likelihood = FALSE
 )
 
+# TODO: remove once done testing
+so <- stan_opts(samples = 100)
+slides <- slides[1:5]
+
 res_dt <- lapply(slides, \(slide) {
   epinow(
     data = dt[(1:train_window)+slide],
     generation_time = generation_time_opts(generation_time),
     delays = delay_opts(delay), rt = rt_opts(prior = rt_prior),
-    horizon = test_window, obs = obs, logs = NULL
+    horizon = test_window, obs = obs, logs = NULL, stan = so
   )$estimates$samples[variable == "reported_cases" & type == "forecast", .(date, sample, value, slide = slide)]
 }) |> rbindlist()
 
