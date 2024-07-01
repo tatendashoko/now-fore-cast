@@ -41,7 +41,10 @@ figures/daily_vs_weekly_%.png: R/fig_daily_vs_weekly.R data/daily_%.rds data/wee
 
 alldvswfigs: $(patsubst %,figures/daily_vs_weekly_%.png,${PROVINCES})
 
-results/forecast_%.rds: R/pipeline.R data/%.rds
+output/forecast_%.rds: R/pipeline.R data/%.rds | output
 	$(call R)
 
-allforecasts: $(patsubst %,results/forecast_daily_%.rds,${PROVINCES}) $(patsubst %,results/forecast_weekly_%.rds,${PROVINCES})
+output/score_%.rds: R/score.R data/daily_%.rds data/weekly_%.rds output/forecast_daily_%.rds forecast_weekly_%.rds
+	$(call R)
+
+allforecasts: $(patsubst %,output/forecast_daily_%.rds,${PROVINCES}) $(patsubst %,output/forecast_weekly_%.rds,${PROVINCES})
