@@ -12,9 +12,8 @@ figures:
 output:
 	mkdir -p $@
 
-# TODO: wget this instead
 data/raw.csv: | data
-	mv ~/Downloads/covid19za_provincial_cumulative_timeline_confirmed.csv $@
+	wget -qO $@ https://raw.githubusercontent.com/dsfsi/covid19za/master/data/covid19za_provincial_cumulative_timeline_confirmed.csv
 
 data/intermediate.rds: R/import.R data/raw.csv
 	$(call R)
