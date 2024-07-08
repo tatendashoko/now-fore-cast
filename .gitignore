@@ -9,3 +9,5 @@ output/*
 
 figures/*
 *.png
+
+.install_packages

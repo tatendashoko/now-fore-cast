@@ -4,13 +4,12 @@ library(data.table)
 library(parallel)
 
 .args <- if (interactive()) c(
-  "data/daily_EC.rds",
-  "output/forecast_daily_EC.rds"
+  "data/weekly_EC.rds",
+  "output/forecast_weekly_EC.rds"
 ) else commandArgs(trailingOnly = TRUE)
 
-options(mc.cores = detectCores()-1L)
-
-dt <- readRDS(.args[1])[, .(date, confirm)]
+# inflate as.Date, because EpiNow2 seems to prefer Date over IDate
+dt <- readRDS(.args[1])[, .(date = as.Date(date), confirm)]
 
 train_window <- 7*10
 test_window <- 7*2
@@ -36,22 +35,44 @@ obs <- obs_opts(
   return_likelihood = FALSE
 )
 
-# TODO: remove once done testing
 so <- stan_opts(
-#  samples = 100
+#	samples = 10,
+	cores = parallel::detectCores()
 )
+
 # slides <- slides[1:5]
-
-
-trim_leading_zero <- function (dt) { dt[which.min(confirm != 0):.N] }
+# find the position of first non-zero
+# keep it, any leading NAs
+trim_leading_zero <- function (init_dt) { 
+	first_non_zero <- init_dt[, which.max(confirm != 0)]
+	if (first_non_zero == 1) {
+		return(rbind(init_dt[1, .(date = date - 1, confirm = 0)], init_dt))
+	} else {
+		# get all the zeros
+		zeros <- init_dt[, c(which(confirm == 0), .N)]
+		# find the last one before the first non-zero
+		from <- which.max(zeros > first_non_zero) - 1L
+		if (from == 0) {
+			return(rbind(init_dt[1, .(date = date - 1, confirm = 0)], init_dt))
+		} else {
+			return(init_dt[zeros[from]:.N])
+		}
+	}
+}
 
 res_dt <- lapply(slides, \(slide) {
-  epinow(
-    data = dt[(1:train_window)+slide] |> trim_leading_zero(),
-    generation_time = generation_time_opts(generation_time),
-    delays = delay_opts(delay), rt = rt_opts(prior = rt_prior),
-    horizon = test_window, obs = obs, logs = NULL, stan = so
-  )$estimates$samples[variable == "reported_cases" & type == "forecast", .(date, sample, value, slide = slide)]
+	slice <- dt[seq_len(train_window) + slide] |> trim_leading_zero()
+	if (slice[, .N > test_window * 2]) {
+	  epinow(
+	    data = slice,
+	    generation_time = generation_time_opts(generation_time),
+	    delays = delay_opts(delay), rt = rt_opts(prior = rt_prior),
+	    horizon = test_window, obs = obs, logs = NULL, stan = so
+	  )$estimates$samples[variable == "reported_cases" & type == "forecast", .(date, sample, value, slide = slide)]
+	} else data.table(
+		date = dt[train_window + slide, date + seq_len(test_window)],
+		sample = NA_integer_, value = NA_integer_, slide = slide
+	)
 }) |> rbindlist()
 
 res_dt |> saveRDS(tail(.args, 1))
