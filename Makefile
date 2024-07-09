@@ -1,50 +1,71 @@
 
-default: data/intermediate.rds
+# structural definitions
+DATDIR ?= data
+FIGDIR ?= figures
+OUTDIR ?= output
 
+default: allscores
+
+# convenience definitions
 R = $(strip Rscript $^ $(1) $@)
 
-data:
-	mkdir -p $@
+define md
+$(1):
+	mkdir -p $$@
 
-figures:
-	mkdir -p $@
+endef
 
-output:
-	mkdir -p $@
+# define all the necessary directory creation
+DIRS := ${DATDIR} ${FIGDIR} ${OUTDIR}
 
-# TODO: wget this instead
-data/raw.csv: | data
-	mv ~/Downloads/covid19za_provincial_cumulative_timeline_confirmed.csv $@
+$(foreach dir,${DIRS},$(eval $(call md,${dir})))
 
-data/intermediate.rds: R/import.R data/raw.csv
+.install_packages: R/install.R
+	$(call R) & touch $@
+
+DATAURL := https://raw.githubusercontent.com/dsfsi/covid19za/master/data/covid19za_provincial_cumulative_timeline_confirmed.csv
+
+# get the raw data
+${DATDIR}/raw.csv: | ${DATDIR}
+	wget -O $@ ${DATAURL}
+
+# initial organization + saving as binary; no cleaning, only type conversion
+# & pivoting to long
+${DATDIR}/intermediate.rds: R/import.R ${DATDIR}/raw.csv | ${DATDIR} .install_packages
 	$(call R)
 
-# TODO probably use file name special variable + $(subst _, ,XXX) to consolidate these
-data/daily_%.rds: R/extract.R data/intermediate.rds
-	$(call R,daily $*)
-
-data/weekly_%.rds: R/extract.R data/intermediate.rds
-	$(call R,weekly $*)
-
+# n.b. raw data also has an UNKNOWN
 PROVINCES := EC FS GP KZN LP MP NC NW WC
 
-alldaily: $(patsubst %,data/daily_%.rds,${PROVINCES})
+# define all possible extracts
+$(foreach agg,daily weekly,$(foreach tar,${PROVINCES},$(eval EXTRACTS += ${DATDIR}/${agg}_${tar}.rds)))
 
-allweekly: $(patsubst %,data/weekly_%.rds,${PROVINCES})
+# extraction rule; also cleans data
+${EXTRACTS}: R/extract.R ${DATDIR}/intermediate.rds
+	$(call R,$(subst _, ,$(basename $(notdir $@))))
+
+${DATDIR}/daily_RSA.rds: R/aggregate.R $(filter ${DATDIR}/daily_%.rds,${EXTRACTS})
+	$(call R)
+
+${DATDIR}/weekly_RSA.rds: R/aggregate.R $(filter ${DATDIR}/weekly_%.rds,${EXTRACTS})
+	$(call R)
+
+allextracts: ${EXTRACTS} ${DATDIR}/daily_RSA.rds ${DATDIR}/weekly_RSA.rds
 
 # needs some tweaking, but basically right
-figures/incidence.png: R/fig_incidence.R data/intermediate.rds | figures
+${FIGDIR}/incidence.png: R/fig_incidence.R data/intermediate.rds | ${FIGDIR}
 	$(call R)
 
-figures/daily_vs_weekly_%.png: R/fig_daily_vs_weekly.R data/daily_%.rds data/weekly_%.rds | figures
+${FIGDIR}/daily_vs_weekly_%.png: R/fig_daily_vs_weekly.R ${DATDIR}/daily_%.rds ${DATDIR}/weekly_%.rds | ${FIGDIR}
 	$(call R)
 
-alldvswfigs: $(patsubst %,figures/daily_vs_weekly_%.png,${PROVINCES})
+alldvswfigs: $(patsubst %,${FIGDIR}/daily_vs_weekly_%.png,${PROVINCES})
 
-output/forecast_%.rds: R/pipeline.R data/%.rds | output
+${OUTDIR}/forecast_%.rds: R/pipeline.R data/%.rds | ${OUTDIR}
 	$(call R)
 
-output/score_%.rds: R/score.R data/daily_%.rds data/weekly_%.rds output/forecast_daily_%.rds output/forecast_weekly_%.rds
+${OUTDIR}/score_%.rds: R/score.R data/daily_%.rds data/weekly_%.rds ${OUTDIR}/forecast_daily_%.rds ${OUTDIR}/forecast_weekly_%.rds
 	$(call R)
 
-allforecasts: $(patsubst %,output/forecast_daily_%.rds,${PROVINCES}) $(patsubst %,output/forecast_weekly_%.rds,${PROVINCES})
+allforecasts: $(patsubst %,${OUTDIR}/forecast_daily_%.rds,${PROVINCES} RSA) $(patsubst %,${OUTDIR}/forecast_weekly_%.rds,${PROVINCES} RSA)
+allscores: $(patsubst %,${OUTDIR}/score_%.rds,${PROVINCES} RSA)
