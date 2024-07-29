@@ -19,24 +19,24 @@ long_dt <- raw_dt |> melt.data.table(
 )
 
 fix_blips <- function(incidence) {
-	errors <- which(incidence < 0)
-	if (length(errors)) {
+	negative_incidence <- which(incidence < 0)
+	if (length(negative_incidence)) {
 		# erroneous blips up: looks like +X, -X => push -cases back
-		blipup <- incidence[errors - 1] == -incidence[errors]
+		blipup <- incidence[negative_incidence - 1] == -incidence[negative_incidence]
 		# erroneous blips down: looks like -X, +X => push -cases forward
-		blipdown <- -incidence[errors] == incidence[errors + 1]
+		blipdown <- -incidence[negative_incidence] == incidence[negative_incidence + 1]
 		stopifnot("ambiguous blips" = !any(blipup & blipdown))
-		incidence[c(errors[blipdown], errors[blipdown]+1)] <- 0
-		incidence[c(errors[blipup]-1, errors[blipup])] <- 0
+		incidence[c(negative_incidence[blipdown], negative_incidence[blipdown]+1)] <- 0
+		incidence[c(negative_incidence[blipup]-1, negative_incidence[blipup])] <- 0
 	}
 	incidence
 }
 
 fix_swaps <- function(incidence, cinc) {
-	errors <- which(incidence < 0)
-	if (length(errors)) {
+	negative_incidence <- which(incidence < 0)
+	if (length(negative_incidence)) {
 		# where swaps would fix the problem: cinc looks like A, A+C, A+B, A+D, ... => swap A+C, A+B
-		swaps <- errors[(cinc[errors-1] > cinc[errors]) & (cinc[errors - 1] < cinc[errors+1])]
+		swaps <- negative_incidence[(cinc[negative_incidence-1] > cinc[negative_incidence]) & (cinc[negative_incidence - 1] < cinc[negative_incidence+1])]
 		shift <- incidence[swaps]
 		incidence[swaps - 1] <- incidence[swaps - 1] + shift
 		incidence[swaps] <- -incidence[swaps]
@@ -46,19 +46,19 @@ fix_swaps <- function(incidence, cinc) {
 }
 
 fix_mean <- function(incidence) {
-	errors <- which(incidence < 0)
-	if (length(errors)) {
-		shift <- floor((incidence[errors] + incidence[errors + 1])/2)
+	negative_incidence <- which(incidence < 0)
+	if (length(negative_incidence)) {
+		shift <- floor((incidence[negative_incidence] + incidence[negative_incidence + 1])/2)
 		mns <- which(shift >= 0)
-		incidence[errors[mns]+1] <- incidence[errors[mns]+1] + incidence[errors[mns]] - shift[mns]
-		incidence[errors[mns]] <- shift[mns]
+		incidence[negative_incidence[mns]+1] <- incidence[negative_incidence[mns]+1] + incidence[negative_incidence[mns]] - shift[mns]
+		incidence[negative_incidence[mns]] <- shift[mns]
 	}
-	errors <- which(incidence < 0)
-	if (length(errors)) {
-		shift <- floor((incidence[errors-1] + incidence[errors])/2)
+	negative_incidence <- which(incidence < 0)
+	if (length(negative_incidence)) {
+		shift <- floor((incidence[negative_incidence-1] + incidence[negative_incidence])/2)
 		mns <- which(shift >= 0)
-		incidence[errors[mns]-1] <- incidence[errors[mns]-1] + incidence[errors[mns]] - shift[mns]
-		incidence[errors[mns]] <- shift[mns]
+		incidence[negative_incidence[mns]-1] <- incidence[negative_incidence[mns]-1] + incidence[negative_incidence[mns]] - shift[mns]
+		incidence[negative_incidence[mns]] <- shift[mns]
 	}
 	incidence
 }

@@ -63,16 +63,34 @@ trim_leading_zero <- function (init_dt) {
 res_dt <- lapply(slides, \(slide) {
 	slice <- dt[seq_len(train_window) + slide] |> trim_leading_zero()
 	if (slice[, .N > test_window * 2]) {
-	  epinow(
-	    data = slice,
-	    generation_time = generation_time_opts(generation_time),
-	    delays = delay_opts(delay), rt = rt_opts(prior = rt_prior),
-	    horizon = test_window, obs = obs, logs = NULL, stan = so
-	  )$estimates$samples[variable == "reported_cases" & type == "forecast", .(date, sample, value, slide = slide)]
-	} else data.table(
-		date = dt[train_window + slide, date + seq_len(test_window)],
-		sample = NA_integer_, value = NA_integer_, slide = slide
-	)
+		out <- epinow(
+			data = slice,
+			generation_time = generation_time_opts(generation_time),
+			delays = delay_opts(delay),
+			rt = rt_opts(prior = rt_prior),
+			horizon = test_window,
+			output = c("samples", "timing"),
+			obs = obs,
+			# logs = .args[[2]],
+			stan = stan_opts(method = "vb")
+		)
+		res <- out$estimates$samples[variable == "reported_cases" & type == "forecast", .(date, sample, value, slide = slide)]
+		forecast_dt <- data.table(
+			forecast = list(res),
+			timing = list(
+				data.table(slide = slide, timing = out$timing)
+			)
+		)
+	} else {
+		empty_forecast <- data.table(
+			date = dt[train_window + slide, date + seq_len(test_window)],
+			sample = NA_integer_, value = NA_integer_, slide = slide
+		)
+		res <- data.table(
+			forecast = list(empty_forecast),
+			timing = list(data.table(slide = slide, timing = lubridate::as.duration(NA)))
+		)
+	}
 }) |> rbindlist()
 
 res_dt |> saveRDS(tail(.args, 1))
