@@ -10,8 +10,8 @@ library(scoringutils)
 
 daily_ref_dt <- readRDS(.args[1]) |> setnames("confirm", "true_value")
 weekly_ref_dt <- readRDS(.args[2]) |> setnames("confirm", "true_value")
-daily_fore_dt <- readRDS(.args[3]) |> setnames("value", "prediction")
-weekly_fore_dt <- readRDS(.args[4]) |> setnames("value", "prediction")
+daily_fore_dt <- readRDS(.args[3])$forecast |> rbindlist() |> setnames("value", "prediction")
+weekly_fore_dt <- readRDS(.args[4])$forecast |> rbindlist() |> setnames("value", "prediction")
 
 score_dt <- rbind(
 # daily => daily
