@@ -2,6 +2,7 @@
 library(EpiNow2)
 library(data.table)
 library(parallel)
+library(bayesplot)
 
 .args <- if (interactive()) c(
   "data/weekly_EC.rds",
@@ -60,6 +61,45 @@ trim_leading_zero <- function (init_dt) {
 	}
 }
 
+#' @title Get rstan diagnostics
+#' @description
+#' Summarise the diagnostic information contained in a `<stanfit>` object. If
+#' the object is not a stanfit object, return a data.table with NA values.
+#' This function is adapted from the `{epidist}` R package in
+#' https://github.com/epinowcast/epidist/pull/175/files
+#' 
+#' @param fit A stanfit object
+#'
+#' @return A data.table containing the summarised diagnostics
+get_rstan_diagnostics <- function(fit) {
+	if (inherits(fit, "stanfit")) {
+		np <- bayesplot::nuts_params(fit)
+		divergent_indices <- np$Parameter == "divergent__"
+		treedepth_indices <- np$Parameter == "treedepth__"
+		diagnostics <- data.table(
+			"samples" = nrow(np) / length(unique(np$Parameter)),
+			"max_rhat" = round(max(bayesplot::rhat(fit), na.rm = TRUE), 3),
+			"divergent_transitions" = sum(np[divergent_indices, ]$Value),
+			"per_divergent_transitions" = mean(np[divergent_indices, ]$Value),
+			"max_treedepth" = max(np[treedepth_indices, ]$Value)
+		)
+		diagnostics[, no_at_max_treedepth :=
+									sum(np[treedepth_indices, ]$Value == max_treedepth)
+		][, per_at_max_treedepth := no_at_max_treedepth / samples]
+	} else{
+		diagnostics <- data.table(
+			"samples" = NA,
+			"max_rhat" = NA,
+			"divergent_transitions" = NA,
+			"per_divergent_transitions" = NA,
+			"max_treedepth" = NA,
+			"no_at_max_treedepth" = NA,
+			"per_at_max_treedepth" = NA
+		)
+	}
+	return(diagnostics[])	
+}
+
 res_dt <- lapply(slides, \(slide) {
 	slice <- dt[seq_len(train_window) + slide] |> trim_leading_zero()
 	if (slice[, .N > test_window * 2]) {
@@ -69,17 +109,26 @@ res_dt <- lapply(slides, \(slide) {
 			delays = delay_opts(delay),
 			rt = rt_opts(prior = rt_prior),
 			horizon = test_window,
-			output = c("samples", "timing"),
 			obs = obs,
 			# logs = .args[[2]],
-			stan = stan_opts(method = "vb")
+			stan = so
 		)
-		res <- out$estimates$samples[variable == "reported_cases" & type == "forecast", .(date, sample, value, slide = slide)]
+		# Extract the forecasted cases
+		forecasts <- out$estimates$samples[
+			variable == "reported_cases" & type == "forecast",
+			.(date, sample, value, slide = slide)
+			]
+		# Extract the diagnostic information
+		diagnostics <- get_rstan_diagnostics(out$estimates$fit)[, slide := slide]
+		# Extract the timing information
+		run_time <- out$timing
+		# Combine the forecast, timing and diagnostics
 		forecast_dt <- data.table(
-			forecast = list(res),
+			forecast = list(forecasts),
 			timing = list(
-				data.table(slide = slide, timing = out$timing)
-			)
+				data.table(slide = slide, timing = run_time)
+			),
+			diagnostics = list(diagnostics)
 		)
 	} else {
 		empty_forecast <- data.table(
@@ -88,7 +137,21 @@ res_dt <- lapply(slides, \(slide) {
 		)
 		res <- data.table(
 			forecast = list(empty_forecast),
-			timing = list(data.table(slide = slide, timing = lubridate::as.duration(NA)))
+			timing = list(data.table(
+				slide = slide,
+				timing = lubridate::as.duration(NA))
+				),
+			diagnostics = list(data.table(
+				slide = slide,
+				"samples" = NA,
+				"max_rhat" = NA,
+				"divergent_transitions" = NA,
+				"per_divergent_transitions" = NA,
+				"max_treedepth" = NA,
+				"no_at_max_treedepth" = NA,
+				"per_at_max_treedepth" = NA
+			)
+			)
 		)
 	}
 }) |> rbindlist()
