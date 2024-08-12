@@ -64,6 +64,8 @@ ${FIGDIR}/benchmarks_%.png: R/fig_timing.R ${OUTDIR}/forecast_daily_%.rds ${OUTD
 
 alldvswfigs: $(patsubst %,${FIGDIR}/daily_vs_weekly_%.png,${PROVINCES})
 
+allbnmrkfigs: $(patsubst %,${FIGDIR}/benchmarks_%.png,${PROVINCES})
+
 ${OUTDIR}/forecast_%.rds: R/pipeline.R data/%.rds | ${OUTDIR}
 	$(call R)
 
