@@ -10,7 +10,7 @@ library(data.table)
 
 raw_dt <- fread(.args[1], drop = c("YYYYMMDD", "total", "source", "UNKNOWN"))
 raw_dt[, date := as.IDate(date, "%d-%m-%Y")]
-raw_dt <- raw_dt[!(date %in% c("2020-03-27", "2020-04-07"))] # these dates are all NAs
+raw_dt <- raw_dt[!(date %in% as.Date(c("2020-03-27", "2020-04-07")))] # these dates are all NAs
 
 if (raw_dt[, any(is.na(.SD)), .SDcols = -c("date")]) stop("NA data entries")
 
