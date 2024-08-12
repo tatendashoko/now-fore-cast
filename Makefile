@@ -72,5 +72,10 @@ ${OUTDIR}/forecast_%.rds: R/pipeline.R data/%.rds | ${OUTDIR}
 ${OUTDIR}/score_%.rds: R/score.R data/daily_%.rds data/weekly_%.rds ${OUTDIR}/forecast_daily_%.rds ${OUTDIR}/forecast_weekly_%.rds
 	$(call R)
 
+${OUTDIR}/diagnostics_%.csv: R/diagnostics.R output/forecast_daily_%.rds output/forecast_weekly_%.rds
+	$(call R)
+
+alldiagnostics: $(patsubst %,${OUTDIR}/diagnostics_%.csv,${PROVINCES})
+
 allforecasts: $(patsubst %,${OUTDIR}/forecast_daily_%.rds,${PROVINCES} RSA) $(patsubst %,${OUTDIR}/forecast_weekly_%.rds,${PROVINCES} RSA)
 allscores: $(patsubst %,${OUTDIR}/score_%.rds,${PROVINCES} RSA)
