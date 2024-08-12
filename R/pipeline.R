@@ -24,7 +24,7 @@ delay <- incubation_period + reporting_delay
 rt_prior <- list(mean = 3, sd = 0.1)
 
 obs <- obs_opts(
-  family = c("negbin", "poisson"),
+  family = c("negbin"),
   phi = list(mean = 0, sd = 1),
   weight = 1,
   week_effect = FALSE,
