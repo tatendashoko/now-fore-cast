@@ -10,4 +10,9 @@ output/*
 figures/*
 *.png
 
-.install_packages
+.Rprofile
+.DS_Store
+
+renv/*
+!renv/activate.R
+!renv/settings.json

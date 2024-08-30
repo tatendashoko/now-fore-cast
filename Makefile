@@ -1,4 +1,7 @@
 
+# see example.makefile for notes on how to make this
+-include local.makefile
+
 # structural definitions
 DATDIR ?= data
 FIGDIR ?= figures
@@ -7,15 +10,24 @@ OUTDIR ?= output
 default: allscores
 
 # convenience definitions
+# use: $(call R[, optional other arguments])
 R = $(strip Rscript $^ $(1) $@)
+wget = wget -O $@ $(1)
 
+RENV = .Rprofile
+
+# build renv/library & other renv infrastructure
+${RENV}: install.R
+	 Rscript --vanilla $^
+
+# for make directory rules
 define md
-$(1):
+$(1): | ${RENV}
 	mkdir -p $$@
 
 endef
 
-# define all the necessary directory creation
+# define all the necessary directory creation & then `md` them
 DIRS := ${DATDIR} ${FIGDIR} ${OUTDIR}
 
 $(foreach dir,${DIRS},$(eval $(call md,${dir})))
@@ -23,11 +35,12 @@ $(foreach dir,${DIRS},$(eval $(call md,${dir})))
 .install_packages: R/install.R
 	$(call R) & touch $@
 
+# source data
 DATAURL := https://raw.githubusercontent.com/dsfsi/covid19za/master/data/covid19za_provincial_cumulative_timeline_confirmed.csv
 
 # get the raw data
 ${DATDIR}/raw.csv: | ${DATDIR}
-	wget -O $@ ${DATAURL}
+	$(call wget ${DATAURL})
 
 # initial organization + saving as binary; no cleaning, only type conversion
 # & pivoting to long
