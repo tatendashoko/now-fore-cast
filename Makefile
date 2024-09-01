@@ -1,13 +1,18 @@
 
+default: allscores
+
 # see example.makefile for notes on how to make this
 -include local.makefile
 
-# structural definitions
-DATDIR ?= data
-FIGDIR ?= figures
-OUTDIR ?= output
+REFDIR ?= local
 
-default: allscores
+local:
+	mkdir -p $@
+
+# structural definitions
+DATDIR := ${REFDIR}/data
+FIGDIR := ${REFDIR}/figures
+OUTDIR := ${REFDIR}/output
 
 # convenience definitions
 # use: $(call R[, optional other arguments])
@@ -22,7 +27,7 @@ ${RENV}: install.R
 
 # for make directory rules
 define md
-$(1): | ${RENV}
+$(1): | ${RENV} ${REFDIR}
 	mkdir -p $$@
 
 endef
@@ -32,19 +37,16 @@ DIRS := ${DATDIR} ${FIGDIR} ${OUTDIR}
 
 $(foreach dir,${DIRS},$(eval $(call md,${dir})))
 
-.install_packages: R/install.R
-	$(call R) & touch $@
-
 # source data
 DATAURL := https://raw.githubusercontent.com/dsfsi/covid19za/master/data/covid19za_provincial_cumulative_timeline_confirmed.csv
 
 # get the raw data
 ${DATDIR}/raw.csv: | ${DATDIR}
-	$(call wget ${DATAURL})
+	$(call wget,${DATAURL})
 
 # initial organization + saving as binary; no cleaning, only type conversion
 # & pivoting to long
-${DATDIR}/intermediate.rds: R/import.R ${DATDIR}/raw.csv | ${DATDIR} .install_packages
+${DATDIR}/intermediate.rds: R/import.R ${DATDIR}/raw.csv | ${DATDIR}
 	$(call R)
 
 # n.b. raw data also has an UNKNOWN
