@@ -81,13 +81,13 @@ alldvswfigs: $(patsubst %,${FIGDIR}/daily_vs_weekly_%.png,${PROVINCES})
 
 allbenchmarkfigs: $(patsubst %,${FIGDIR}/benchmarks_%.png,${PROVINCES})
 
-${OUTDIR}/forecast_%.rds: R/pipeline.R data/%.rds | ${OUTDIR}
+${OUTDIR}/forecast_%.rds: R/pipeline.R ${DATDIR}/%.rds | ${OUTDIR}
 	$(call R)
 
-${OUTDIR}/score_%.rds: R/score.R data/daily_%.rds data/weekly_%.rds ${OUTDIR}/forecast_daily_%.rds ${OUTDIR}/forecast_weekly_%.rds
+${OUTDIR}/score_%.rds: R/score.R ${DATDIR}/daily_%.rds ${DATDIR}/weekly_%.rds ${OUTDIR}/forecast_daily_%.rds ${OUTDIR}/forecast_weekly_%.rds
 	$(call R)
 
-${OUTDIR}/diagnostics_%.csv: R/diagnostics.R output/forecast_daily_%.rds output/forecast_weekly_%.rds
+${OUTDIR}/diagnostics_%.csv: R/diagnostics.R ${OUTDIR}/forecast_daily_%.rds ${OUTDIR}/forecast_weekly_%.rds
 	$(call R)
 
 alldiagnostics: $(patsubst %,${OUTDIR}/diagnostics_%.csv,${PROVINCES})
