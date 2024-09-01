@@ -1,13 +1,15 @@
+local.makefile
+
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
 
-data/*
-output/*
-*.rds
+local/*
+network/*
+network
 
-figures/*
+*.rds
 *.png
 
 .Rprofile
