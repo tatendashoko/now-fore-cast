@@ -37,7 +37,6 @@ obs <- obs_opts(
 )
 
 so <- stan_opts(
-#	samples = 10,
 	cores = parallel::detectCores()
 )
 
@@ -110,7 +109,6 @@ res_dt <- lapply(slides, \(slide) {
 			rt = rt_opts(prior = rt_prior),
 			horizon = test_window,
 			obs = obs,
-			# logs = .args[[2]],
 			stan = so
 		)
 		# Extract the forecasted cases
