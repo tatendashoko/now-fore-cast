@@ -22,7 +22,7 @@ incubation_period <- LogNormal(mean = 5, sd = 1, max = 14)
 generation_time <- Gamma(mean = 7.12, sd = 1.72, max = 10) # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9837419/
 reporting_delay <- LogNormal(mean = 2, sd = 1, max = 10)
 delay <- incubation_period + reporting_delay
-rt_prior <- list(mean = 3, sd = 0.1)
+rt_prior <- list(mean = 1, sd = 0.5)
 
 obs <- obs_opts(
   family = c("negbin"),
