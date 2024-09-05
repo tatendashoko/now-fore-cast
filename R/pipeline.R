@@ -24,13 +24,13 @@ reporting_delay <- LogNormal(mean = 2, sd = 1, max = 10)
 delay <- incubation_period + reporting_delay
 rt_prior <- list(mean = 1, sd = 0.5)
 
+# Check if forecasting is being done for daily data or weekly. Will be used to
+# turn on/off week effect below; week effect is off for the weekly accumulated data.
+is_daily <- sub("//_*", "", basename(.args[1])) == "daily"
+
+# Observation model
 obs <- obs_opts(
-  family = c("negbin"),
-  phi = list(mean = 0, sd = 1),
-  weight = 1,
-  week_effect = FALSE,
-  week_length = 7,
-  scale = 1,
+  week_effect = ifelse(is_daily, TRUE, FALSE),
   na = "accumulate",
   likelihood = TRUE,
   return_likelihood = FALSE
