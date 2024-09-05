@@ -126,7 +126,8 @@ res_dt <- lapply(slides, \(slide) {
 			timing = list(
 				data.table(slide = slide, timing = run_time)
 			),
-			diagnostics = list(diagnostics)
+			diagnostics = list(diagnostics),
+			fit = list(out$estimates$fit)
 		)
 	} else {
 		empty_forecast <- data.table(
@@ -148,7 +149,8 @@ res_dt <- lapply(slides, \(slide) {
 				"max_treedepth" = NA,
 				"no_at_max_treedepth" = NA,
 				"per_at_max_treedepth" = NA
-			)
+			),
+			fit = list(NA)
 			)
 		)
 	}
