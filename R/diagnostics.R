@@ -2,8 +2,8 @@ library(data.table)
 
 .args <- if (interactive()) {
 	c(
-		file.path("output", c("forecast_daily_EC.rds", "forecast_weekly_EC.rds")),
-		file.path("output", "diagnostics_EC.csv")
+		file.path("local/output", c("forecast_daily_EC.rds", "forecast_weekly_EC.rds")),
+		file.path("local/output", "diagnostics_EC.csv")
 	)
 } else {
 	commandArgs(trailingOnly = TRUE)
