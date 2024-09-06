@@ -31,7 +31,7 @@ is_daily <- sub("//_*", "", basename(.args[1])) == "daily"
 # Observation model
 obs <- obs_opts(
   week_effect = ifelse(is_daily, TRUE, FALSE),
-  na = "accumulate",
+  na = ifelse(is_daily, "missing", "accumulate"), # only accumulate for the weekly case
   likelihood = TRUE,
   return_likelihood = FALSE
 )
