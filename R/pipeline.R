@@ -15,7 +15,7 @@ dt <- readRDS(.args[1])[, .(date = as.Date(date), confirm)]
 train_window <- 7*10
 test_window <- 7*2
 
-slides <- seq(0, dt[, .N - (train_window + test_window)], by = test_window)[1:3]
+slides <- seq(0, dt[, .N - (train_window + test_window)], by = test_window)
 
 incubation_period <- LogNormal(mean = 5, sd = 1, max = 14)
 # generation_time <- LogNormal(mean = 5.2, sd = 1.72, max = 10) # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7201952/
