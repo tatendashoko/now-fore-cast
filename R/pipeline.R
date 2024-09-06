@@ -37,7 +37,9 @@ obs <- obs_opts(
 )
 
 so <- stan_opts(
-	cores = parallel::detectCores()
+	cores = parallel::detectCores() - 2,
+	samples = 5000,
+	control = list(adapt_delta = 0.99)
 )
 
 # slides <- slides[1:5]
