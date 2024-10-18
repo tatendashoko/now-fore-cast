@@ -8,13 +8,15 @@ library(scoringutils)
   file.path("local", "output", "score_GP.rds")
 ) else commandArgs(trailingOnly = TRUE)
 
+# True data
 daily_ref_dt <- readRDS(.args[1]) |> setnames("confirm", "true_value")
 weekly_ref_dt <- readRDS(.args[2]) |> setnames("confirm", "true_value")
+# Forecasts
 daily_fore_dt <- readRDS(.args[3])$forecast |> rbindlist() |> setnames("value", "prediction")
 weekly_fore_dt <- readRDS(.args[4])$forecast |> rbindlist() |> setnames("value", "prediction")
 
 score_dt <- rbind(
-# daily => daily
+# daily forecast vs daily data
 (daily_fore_dt[
   daily_ref_dt, on = .(date),
   .(sample, slide, date, prediction, true_value),
@@ -24,7 +26,7 @@ score_dt <- rbind(
   by = slide
 ],
 
-# daily => weekly
+# daily forecasts vs weekly data
 (daily_fore_dt[
   weekly_ref_dt, on = .(date),
   .(sample, slide, date, prediction, true_value),
@@ -36,7 +38,7 @@ score_dt <- rbind(
   by = slide
 ],
 
-# weekly => daily
+# weekly forecasts vs daily data
 (weekly_fore_dt[
   daily_ref_dt, on = .(date),
   .(sample, slide, date, prediction, true_value),
@@ -46,7 +48,7 @@ score_dt <- rbind(
   by = slide
 ],
 
-# weekly => weekly
+# weekly forecasts vs weekly data
 (weekly_fore_dt[
   weekly_ref_dt, on = .(date),
   .(sample, slide, date, prediction, true_value),
