@@ -18,7 +18,7 @@
     },
     "EpiNow2": {
       "Package": "EpiNow2",
-      "Version": "1.5.2.9000",
+      "Version": "1.6.0.9000",
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
