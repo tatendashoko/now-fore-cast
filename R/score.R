@@ -3,9 +3,9 @@ library(data.table)
 library(scoringutils)
 
 .args <- if (interactive()) c(
-  file.path("data", c("daily_GP.rds", "weekly_GP.rds")),
-  file.path("output", c("forecast_daily_GP.rds", "forecast_weekly_GP.rds")),
-  file.path("output", "score_GP.rds")
+  file.path("local", "data", c("daily_GP.rds", "weekly_GP.rds")),
+  file.path("local", "output", c("forecast_daily_GP.rds", "forecast_weekly_GP.rds")),
+  file.path("local", "output", "score_GP.rds")
 ) else commandArgs(trailingOnly = TRUE)
 
 daily_ref_dt <- readRDS(.args[1]) |> setnames("confirm", "true_value")
