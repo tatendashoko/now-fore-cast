@@ -1,12 +1,11 @@
-
 library(EpiNow2)
 library(data.table)
 library(parallel)
 library(bayesplot)
 
 .args <- if (interactive()) c(
-  "data/weekly_EC.rds",
-  "output/forecast_weekly_EC.rds"
+  "local/data/weekly_EC.rds",
+  "local/output/forecast_weekly_EC.rds"
 ) else commandArgs(trailingOnly = TRUE)
 
 # inflate as.Date, because EpiNow2 seems to prefer Date over IDate
