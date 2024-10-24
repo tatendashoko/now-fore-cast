@@ -22,7 +22,7 @@ score_dt <- rbind(
   .(sample, slide, date, prediction, true_value),
   nomatch = 0
 ] |> score())[,
-  .(date = min(date), crps = mean(crps), from = "daily", to = "daily"),
+  .(date = min(date), crps = mean(crps), forecast = "daily", data = "daily"),
   by = slide
 ],
 
@@ -34,7 +34,7 @@ score_dt <- rbind(
 ][, csum := cumsum(prediction), by = .(sample, slide) ][!is.na(true_value),
   .(date, prediction = c(csum[1], diff(csum)), true_value), by = .(sample, slide)
 ] |> score())[,
-  .(date = min(date), crps = mean(crps), from = "daily", to = "weekly"),
+  .(date = min(date), crps = mean(crps), forecast = "daily", data = "weekly"),
   by = slide
 ],
 
@@ -44,7 +44,7 @@ score_dt <- rbind(
   .(sample, slide, date, prediction, true_value),
   nomatch = 0
 ] |> score())[,
-  .(date = min(date), crps = mean(crps), from = "weekly", to = "daily"),
+  .(date = min(date), crps = mean(crps), forecast = "weekly", data = "daily"),
   by = slide
 ],
 
@@ -56,7 +56,7 @@ score_dt <- rbind(
 ][, csum := cumsum(prediction), by = .(sample, slide) ][!is.na(true_value),
                                                         .(date, prediction = c(csum[1], diff(csum)), true_value), by = .(sample, slide)
 ] |> score())[,
-              .(date = min(date), crps = mean(crps), from = "weekly", to = "weekly"),
+              .(date = min(date), crps = mean(crps), forecast = "weekly", data = "weekly"),
               by = slide
 ]
 
