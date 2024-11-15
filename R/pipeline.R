@@ -41,7 +41,6 @@ so <- stan_opts(
 	control = list(adapt_delta = 0.999, stepsize = 0.1)
 )
 
-# slides <- slides[1:5]
 # find the position of first non-zero
 # keep it, any leading NAs
 trim_leading_zero <- function (init_dt) { 
