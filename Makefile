@@ -77,9 +77,21 @@ ${FIGDIR}/daily_vs_weekly_%.png: R/fig_daily_vs_weekly.R ${DATDIR}/daily_%.rds $
 ${FIGDIR}/benchmarks_%.png: R/fig_timing.R ${OUTDIR}/forecast_daily_%.rds ${OUTDIR}/forecast_weekly_%.rds | ${FIGDIR}
 	$(call R)
 
+${FIGDIR}/panel_fig_%.png: \
+	R/fig_panel.R \
+	${DATDIR}/daily_%.rds \
+	${DATDIR}/weekly_%.rds \
+	${OUTDIR}/score_%.rds \
+	${OUTDIR}/forecast_daily_%.rds \
+	${OUTDIR}/forecast_weekly_%.rds \
+	${OUTDIR}/diagnostics_%.csv | ${FIGDIR}
+	$(call R)
+
 alldvswfigs: $(patsubst %,${FIGDIR}/daily_vs_weekly_%.png,${PROVINCES})
 
 allbenchmarkfigs: $(patsubst %,${FIGDIR}/benchmarks_%.png,${PROVINCES})
+
+allpanelfigs: $(patsubst %,${FIGDIR}/panel_fig_%.png,${PROVINCES})
 
 ${OUTDIR}/forecast_%.rds: R/pipeline.R ${DATDIR}/%.rds | ${OUTDIR}
 	$(call R)
