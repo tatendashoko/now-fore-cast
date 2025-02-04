@@ -75,12 +75,30 @@ get_rstan_diagnostics <- function(fit) {
 		np <- bayesplot::nuts_params(fit)
 		divergent_indices <- np$Parameter == "divergent__"
 		treedepth_indices <- np$Parameter == "treedepth__"
+		# Calculating ESS per second
+		# Get stan's sampling runtime
+		elapsed_time <- sum(rstan::get_elapsed_time(fit)) # total time taken for warmup and sampling for all chains. NB: NEEDS REVIEW
+		
+		# ESS can only be calculated on the extracted variable in the form of a matrix with dimensions iterations x chains
+		# Extract the infections variable as that is used for forecasting
+		reports_posterior <- posterior::extract_variable_array(
+		    posterior::as_draws_array(fit),
+		    "reports" # NB: NEEDS REVIEW; is it rather infections??
+		)
+		# Calculate the different types of ess (basic, bulk, and tail)
+		fit_ess_basic <- posterior::ess_basic(reports_posterior)
+		fit_ess_bulk <- posterior::ess_bulk(reports_posterior)
+		fit_ess_tail <- posterior::ess_tail(reports_posterior)
+		
 		diagnostics <- data.table(
 			"samples" = nrow(np) / length(unique(np$Parameter)),
 			"max_rhat" = round(max(bayesplot::rhat(fit), na.rm = TRUE), 3),
 			"divergent_transitions" = sum(np[divergent_indices, ]$Value),
 			"per_divergent_transitions" = mean(np[divergent_indices, ]$Value),
-			"max_treedepth" = max(np[treedepth_indices, ]$Value)
+			"max_treedepth" = max(np[treedepth_indices, ]$Value),
+			"fit_ess_basic_ps" = round(fit_ess_basic/elapsed_time, 3),
+			"fit_ess_bulk_ps" = round(fit_ess_bulk/elapsed_time, 3),
+			"fit_ess_tail_ps" = round(fit_ess_tail/elapsed_time, 3)
 		)
 		diagnostics[, no_at_max_treedepth :=
 									sum(np[treedepth_indices, ]$Value == max_treedepth)
@@ -93,7 +111,10 @@ get_rstan_diagnostics <- function(fit) {
 			"per_divergent_transitions" = NA,
 			"max_treedepth" = NA,
 			"no_at_max_treedepth" = NA,
-			"per_at_max_treedepth" = NA
+			"per_at_max_treedepth" = NA,
+			"fit_ess_basic_ps" = NA,
+			"fit_ess_bulk_ps" = NA,
+			"fit_ess_tail_ps" = NA
 		)
 	}
 	return(diagnostics[])	
@@ -148,7 +169,10 @@ res_dt <- lapply(slides, \(slide) {
 				"per_divergent_transitions" = NA,
 				"max_treedepth" = NA,
 				"no_at_max_treedepth" = NA,
-				"per_at_max_treedepth" = NA
+				"per_at_max_treedepth" = NA,
+				"fit_ess_basic_ps" = NA,
+				"fit_ess_bulk_ps" = NA,
+				"fit_ess_tail_ps" = NA
 			),
 			fit = list(NA)
 			)
