@@ -3,11 +3,11 @@ library(ggplot2)
 library(patchwork)
 
 .args <- if (interactive()) c(
-    file.path("local", "data", c("daily_WC.rds", "weekly_WC.rds")), # cases
-    file.path("local", "output", "score_WC.rds"), # scores
-    file.path("local", "output", c("forecast_daily_WC.rds", "forecast_weekly_WC.rds")), # forecasts (also contains timing)
-    file.path("local", "output", "diagnostics_WC.csv"), # diagnostics
-    file.path("local", "figures", "panel_fig_WC.png") # diagnostics
+    file.path("local", "data", c("daily_EC.rds", "weekly_EC.rds")), # cases
+    file.path("local", "output", "score_EC.rds"), # scores
+    file.path("local", "output", c("forecast_daily_EC.rds", "forecast_weekly_EC.rds")), # forecasts (also contains timing)
+    file.path("local", "output", "diagnostics_EC.csv"), # diagnostics
+    file.path("local", "figures", "panel_fig_EC.png") # diagnostics
 ) else commandArgs(trailingOnly = TRUE)
 
 # Load the raw data
