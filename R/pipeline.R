@@ -139,10 +139,11 @@ res_dt <- lapply(slides, \(slide) {
 		# Extract the diagnostic information
 		diagnostics <- get_rstan_diagnostics(out$estimates$fit)
 		diagnostics <- diagnostics[, slide := slide]
+		# Extract and append stan's internal timing of the model fitting process.
+		stan_elapsed_time <- sum(rstan::get_elapsed_time(out$estimates$fit))
+		diagnostics <- diagnostics[, stan_elapsed_time := stan_elapsed_time] #  NB: NEEDS REVIEW: Currently computes total time taken for warmup and sampling for all chains.
 		# Extract the crude timing measured by epinow()
 		crude_run_time <- out$timing
-		# Get stan's sampling runtime
-		stan_elapsed_time <- sum(rstan::get_elapsed_time(out$estimates$fit)) # total time taken for warmup and sampling for all chains. NB: NEEDS REVIEW
 		# Combine the forecast, timing and diagnostics
 		forecast_dt <- data.table(
 		    forecast = list(forecasts),
@@ -150,7 +151,7 @@ res_dt <- lapply(slides, \(slide) {
 		        data.table(
 		            slide = slide,
 		            crude_run_time = crude_run_time,
-		            stan_elapsed_time = stan_elapsed_time
+		            stan_elapsed_time := stan_elapsed_time
 		        )
 		    ),
 		    diagnostics = list(diagnostics),
@@ -164,8 +165,9 @@ res_dt <- lapply(slides, \(slide) {
 		res <- data.table(
 			forecast = list(empty_forecast),
 			timing = list(data.table(
-				slide = slide,
-				timing = lubridate::as.duration(NA))
+			    slide = slide,
+			    crude_run_time = lubridate::as.duration(NA),
+			    stan_elapsed_time = lubridate::as.duration(NA))
 				),
 			diagnostics = list(data.table(
 				slide = slide,
@@ -178,7 +180,8 @@ res_dt <- lapply(slides, \(slide) {
 				"per_at_max_treedepth" = NA,
 				"ess_basic" = NA,
 				"ess_bulk" = NA,
-				"ess_tail" = NA
+				"ess_tail" = NA,
+				"stan_elapsed_time" = NA
 			),
 			fit = list(NA)
 			)
