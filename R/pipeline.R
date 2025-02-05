@@ -155,7 +155,7 @@ res_dt <- lapply(slides, \(slide) {
 		        )
 		    ),
 		    diagnostics = list(diagnostics),
-		    fit = ifelse(crude_run_time < lubridate::duration(5), list(out$estimates$fit), list(NA)) # Only save the fit if the runtime is less than 5 secs (for memory reasons; the fits are massive = 27 Gb ish)
+		    fit = ifelse(stan_elapsed_time < lubridate::duration(3), list(out$estimates$fit), list(NA)) # Only save the fit if the runtime is less than specified secs (for memory reasons; the fits are massive = 27 Gb ish)
 		)
 	} else {
 		empty_forecast <- data.table(
