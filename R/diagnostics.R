@@ -18,8 +18,12 @@ diagnostics_daily_fits$type <- "daily"
 diagnostics_weekly_fits$type <- "weekly"
 diagnostics_dt_combined <- rbind(diagnostics_daily_fits, diagnostics_weekly_fits)
 
-# order rows by slide
-# diagnostics_dt_combined <- diagnostics_dt_combined[order(slide)]
+# Calculate ESS per second
+diagnostics_dt_combined[, `:=`(
+    ess_basic_ps = ess_basic/stan_elapsed_time,
+    ess_bulk_ps = ess_bulk/stan_elapsed_time,
+    ess_tail_ps = ess_tail/stan_elapsed_time)
+]
 
 # Save as csv
 write.csv(diagnostics_dt_combined, tail(.args, 1), row.names = FALSE)
