@@ -109,9 +109,9 @@ get_rstan_diagnostics <- function(fit) {
 			"max_treedepth" = NA,
 			"no_at_max_treedepth" = NA,
 			"per_at_max_treedepth" = NA,
-			"fit_ess_basic_ps" = NA,
-			"fit_ess_bulk_ps" = NA,
-			"fit_ess_tail_ps" = NA
+			"ess_basic" = NA,
+			"ess_bulk" = NA,
+			"ess_tail" = NA
 		)
 	}
 	return(diagnostics[])	
@@ -174,9 +174,9 @@ res_dt <- lapply(slides, \(slide) {
 				"max_treedepth" = NA,
 				"no_at_max_treedepth" = NA,
 				"per_at_max_treedepth" = NA,
-				"fit_ess_basic_ps" = NA,
-				"fit_ess_bulk_ps" = NA,
-				"fit_ess_tail_ps" = NA
+				"ess_basic" = NA,
+				"ess_bulk" = NA,
+				"ess_tail" = NA
 			),
 			fit = list(NA)
 			)
