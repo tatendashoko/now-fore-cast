@@ -10,13 +10,13 @@ library(data.table)
 }
 
 # Get diagnostic data
-daily_dt <- readRDS(.args[1])$diagnostics |> rbindlist()
-weekly_dt <- readRDS(.args[2])$diagnostics |> rbindlist()
+diagnostics_daily_fits <- readRDS(.args[1])$diagnostics |> rbindlist()
+diagnostics_weekly_fits <- readRDS(.args[2])$diagnostics |> rbindlist()
 
 # Create groupable data for the plots
-daily_dt$type <- "daily"
-weekly_dt$type <- "weekly"
-diagnostics_dt_combined <- rbind(daily_dt, weekly_dt)
+diagnostics_daily_fits$type <- "daily"
+diagnostics_weekly_fits$type <- "weekly"
+diagnostics_dt_combined <- rbind(diagnostics_daily_fits, diagnostics_weekly_fits)
 
 # order rows by slide
 # diagnostics_dt_combined <- diagnostics_dt_combined[order(slide)]
