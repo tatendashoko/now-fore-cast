@@ -121,6 +121,7 @@ get_rstan_diagnostics <- function(fit) {
 res_dt <- lapply(slides, \(slide) {
 	slice <- dt[seq_len(train_window) + slide] |> trim_leading_zero()
 	if (slice[, .N > test_window * 2]) {
+	    # Fit the model
 		out <- epinow(
 			data = slice,
 			generation_time = generation_time_opts(generation_time),
@@ -130,7 +131,7 @@ res_dt <- lapply(slides, \(slide) {
 			obs = obs,
 			stan = so
 		)
-		# Extract the forecasted cases
+		# Extract the forecast cases
 		forecasts <- out$estimates$samples[
 			variable == "reported_cases" & type == "forecast",
 			.(date, sample, value, slide = slide)
