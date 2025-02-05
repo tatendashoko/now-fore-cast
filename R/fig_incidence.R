@@ -3,8 +3,8 @@ library(data.table)
 library(ggplot2)
 
 .args <- if (interactive()) c(
-  file.path("data", "intermediate.rds"),
-  file.path("figures", "incidence.png")
+  file.path("local", "data", "intermediate.rds"),
+  file.path("local", "figures", "incidence.png")
 ) else commandArgs(trailingOnly = TRUE)
 
 dt <- readRDS(.args[1])

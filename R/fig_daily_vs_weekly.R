@@ -3,9 +3,9 @@ library(data.table)
 library(ggplot2)
 
 .args <- if (interactive()) c(
-  file.path("data", "daily_GP.rds"),
-  file.path("data", "weekly_GP.rds"),
-  file.path("figures", "daily_vs_weekly_GP.png")
+  file.path("local", "data", "daily_EC.rds"),
+  file.path("local", "data", "weekly_EC.rds"),
+  file.path("local", "figures", "daily_vs_weekly_EC.png")
 ) else commandArgs(trailingOnly = TRUE)
 
 daily_dt <- readRDS(.args[1])
