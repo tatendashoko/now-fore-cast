@@ -96,9 +96,10 @@ get_rstan_diagnostics <- function(fit) {
 			"divergent_transitions" = sum(np[divergent_indices, ]$Value),
 			"per_divergent_transitions" = mean(np[divergent_indices, ]$Value),
 			"max_treedepth" = max(np[treedepth_indices, ]$Value),
-			"fit_ess_basic_ps" = round(fit_ess_basic/elapsed_time, 3),
-			"fit_ess_bulk_ps" = round(fit_ess_bulk/elapsed_time, 3),
-			"fit_ess_tail_ps" = round(fit_ess_tail/elapsed_time, 3)
+			"ess_basic" = fit_ess_basic,
+			"ess_bulk" = fit_ess_bulk,
+			"ess_tail" = fit_ess_tail,
+			"elapsed_time" = elapsed_time
 		)
 		diagnostics[, no_at_max_treedepth :=
 									sum(np[treedepth_indices, ]$Value == max_treedepth)
