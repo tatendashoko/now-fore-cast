@@ -75,10 +75,7 @@ get_rstan_diagnostics <- function(fit) {
 		np <- bayesplot::nuts_params(fit)
 		divergent_indices <- np$Parameter == "divergent__"
 		treedepth_indices <- np$Parameter == "treedepth__"
-		# Calculating ESS per second
-		# Get stan's sampling runtime
-		elapsed_time <- sum(rstan::get_elapsed_time(fit)) # total time taken for warmup and sampling for all chains. NB: NEEDS REVIEW
-		
+		# Calculating ESS (basic, bulk, and tail)
 		# ESS can only be calculated on the extracted variable in the form of a matrix with dimensions iterations x chains
 		# Extract the infections variable as that is used for forecasting
 		reports_posterior <- posterior::extract_variable_array(
@@ -139,17 +136,24 @@ res_dt <- lapply(slides, \(slide) {
 			.(date, sample, value, slide = slide)
 			]
 		# Extract the diagnostic information
-		diagnostics <- get_rstan_diagnostics(out$estimates$fit)[, slide := slide]
-		# Extract the timing information
-		run_time <- out$timing
+		diagnostics <- get_rstan_diagnostics(out$estimates$fit)
+		diagnostics <- diagnostics[, slide := slide]
+		# Extract the crude timing measured by epinow()
+		crude_run_time <- out$timing
+		# Get stan's sampling runtime
+		stan_elapsed_time <- sum(rstan::get_elapsed_time(out$estimates$fit)) # total time taken for warmup and sampling for all chains. NB: NEEDS REVIEW
 		# Combine the forecast, timing and diagnostics
 		forecast_dt <- data.table(
-			forecast = list(forecasts),
-			timing = list(
-				data.table(slide = slide, timing = run_time)
-			),
-			diagnostics = list(diagnostics),
-			fit = ifelse(run_time < lubridate::duration(5), list(out$estimates$fit), list(NA)) # Only save the fit if the runtime is less than 5 secs (for memory reasons; the fits are massive = 27 Gb ish)
+		    forecast = list(forecasts),
+		    timing = list(
+		        data.table(
+		            slide = slide,
+		            crude_run_time = crude_run_time,
+		            stan_elapsed_time = stan_elapsed_time
+		        )
+		    ),
+		    diagnostics = list(diagnostics),
+		    fit = ifelse(crude_run_time < lubridate::duration(5), list(out$estimates$fit), list(NA)) # Only save the fit if the runtime is less than 5 secs (for memory reasons; the fits are massive = 27 Gb ish)
 		)
 	} else {
 		empty_forecast <- data.table(
