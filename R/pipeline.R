@@ -35,7 +35,7 @@ obs <- obs_opts(
   return_likelihood = FALSE
 )
 
-so <- stan_opts(
+stan <- stan_opts(
 	cores = parallel::detectCores() - 2,
 	samples = 5000,
 	control = list(adapt_delta = 0.999, stepsize = 0.1)
