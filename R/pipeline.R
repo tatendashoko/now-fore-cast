@@ -111,7 +111,8 @@ get_rstan_diagnostics <- function(fit) {
 			"per_at_max_treedepth" = NA,
 			"ess_basic" = NA,
 			"ess_bulk" = NA,
-			"ess_tail" = NA
+			"ess_tail" = NA,
+			"stan_elapsed_time" = NA
 		)
 	}
 	return(diagnostics[])	
