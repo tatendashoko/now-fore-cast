@@ -2,8 +2,8 @@
 library(data.table)
 
 .args <- if (interactive()) c(
-	list.files("data", "daily", full.names = TRUE) |> grep("RSA", x = _, value = TRUE, invert = TRUE),
-	file.path("data", "daily_RSA.rds")
+	list.files("local", "data", "daily", full.names = TRUE) |> grep("RSA", x = _, value = TRUE, invert = TRUE),
+	file.path("local", "data", "daily_RSA.rds")
 ) else commandArgs(trailingOnly = TRUE)
 
 all_dt <- (head(.args, -1) |> lapply(readRDS) |> rbindlist())

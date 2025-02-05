@@ -2,9 +2,9 @@
 library(data.table)
 
 .args <- if (interactive()) c(
-  file.path("data", "intermediate.rds"),
+  file.path("local", "data", "intermediate.rds"),
   "daily", "GP",
-  file.path("data", "daily_GP.rds")
+  file.path("local", "data", "daily_GP.rds")
 ) else commandArgs(trailingOnly = TRUE)
 
 target_province <- .args[3]

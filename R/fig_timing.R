@@ -3,8 +3,8 @@ library(ggplot2)
 
 .args <- if (interactive()) {
   c(
-    file.path("output", c("forecast_daily_EC.rds", "forecast_weekly_EC.rds")),
-    file.path("figures", "benchmarks_EC.png")
+    file.path("local", "output", c("forecast_daily_EC.rds", "forecast_weekly_EC.rds")),
+    file.path("local", "figures", "benchmarks_EC.png")
   )
 } else {
   commandArgs(trailingOnly = TRUE)
