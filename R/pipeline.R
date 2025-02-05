@@ -95,8 +95,7 @@ get_rstan_diagnostics <- function(fit) {
 			"max_treedepth" = max(np[treedepth_indices, ]$Value),
 			"ess_basic" = fit_ess_basic,
 			"ess_bulk" = fit_ess_bulk,
-			"ess_tail" = fit_ess_tail,
-			"elapsed_time" = elapsed_time
+			"ess_tail" = fit_ess_tail
 		)
 		diagnostics[, no_at_max_treedepth :=
 									sum(np[treedepth_indices, ]$Value == max_treedepth)
