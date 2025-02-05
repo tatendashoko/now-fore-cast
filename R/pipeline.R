@@ -129,7 +129,7 @@ res_dt <- lapply(slides, \(slide) {
 			rt = rt_opts(prior = rt_prior),
 			horizon = test_window,
 			obs = obs,
-			stan = so
+			stan = stan
 		)
 		# Extract the forecast cases
 		forecasts <- out$estimates$samples[
