@@ -46,9 +46,9 @@ cases_plt <- ggplot() +
 		data = weekly_cases[!is.na(confirm)],
 		color = "firebrick"
 	) +
-	scale_y_continuous(
-		"Daily Incidence", sec.axis = sec_axis(
-			~ . * 7, name = "Weekly Incidence" 
+	scale_y_log10(
+		"Daily Incidence (log10)", sec.axis = sec_axis(
+			~ . * 7, name = "Weekly Incidence (log10)"
 		)
 	)
 
@@ -78,7 +78,7 @@ score_plt <- ggplot(data = scores_complete) +
                           breaks = c("daily", "weekly")) +
     scale_color_brewer(na.translate = FALSE, palette = "Dark2") +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-    labs(y = "CRPS (log-scale)",
+    labs(y = "CRPS (log10)",
          linetype = "Data",
          color = "Forecast scale"
     )
