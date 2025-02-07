@@ -109,27 +109,32 @@ diagnostics_dt_long <- melt(
 
 # Plot
 divergences_plt <- 
-    ggplot(diagnostics_dt_long, 
+    ggplot(diagnostics_dt_long[ess_type == "tail"], # Only plotting ESS tail
            aes(x = date,
                y = ess_value,
-               color = ess_type,
-               linetype = type
+               color = type#,
+               # linetype = type
            )
     ) +
-    geom_line() +
+    geom_line(aes(color = type)) +
     geom_point(size = 1) +
     scale_y_log10() +
     scale_x_date(NULL, date_breaks = "month", date_labels = "%b '%y") +
-    scale_color_manual(values = c("#1F77B4", "#FF7F0E", "#2CA02C")) +
-    scale_linetype_manual(
-        values = c("daily" = "solid", "weekly" = "dashed"),
-        breaks = c("daily", "weekly")
-    ) +
+    scale_color_brewer(na.translate = FALSE, palette = "Dark2") +
+    # scale_color_manual(
+    #     values = c("daily" = "#1F77B4", "weekly" = "#FF7F0E"),
+    #     breaks = c("daily", "weekly"),
+    #     na.translate = FALSE
+    # ) +
+    # scale_linetype_manual(
+    #     values = c("daily" = "solid", "weekly" = "dashed"),
+    #     breaks = c("daily", "weekly")
+    # ) +
     labs(
         # title = "Effective sample size per second",
         x = "Date",
         y = "ESS per sec (log10)",
-        color = "ESS type",
+        color = "Forecast scale",
         linetype = "Data"
     ) +
     theme(
