@@ -17,12 +17,39 @@ test_window <- 7*2
 
 slides <- seq(0, dt[, .N - (train_window + test_window)], by = test_window)
 
-incubation_period <- LogNormal(mean = 5, sd = 1, max = 14)
-# generation_time <- LogNormal(mean = 5.2, sd = 1.72, max = 10) # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7201952/
+sars_cov_incubation <- get_parameters(
+    epiparameter_db(disease = "COVID-19", single_epiparameter = TRUE, epi_name = "incubation period")
+)
+
+# Incubation period
+# Get from epiparameter package
+sars_cov_incubation_dist <- epiparameter_db(
+    disease = "COVID-19",
+    single_epiparameter = TRUE,
+    epi_name = "incubation period"
+)
+
+incubation_params <- get_parameters(sars_cov_incubation_dist)
+
+incubation_max <- round(quantile(sars_cov_incubation_dist, 0.999)) # Upper 99.9% range needed for EpiNow2
+
+incubation_period <- LogNormal(
+    meanlog = sars_cov_incubation_dist[["meanlog"]],
+    sdlog = sars_cov_incubation_dist[["sdlog"]],
+    max = incubation_max
+) # doi:10.3390/jcm9020538 obtained from epiparameter by running 
+
+# Generation period
 generation_time <- Gamma(mean = 7.12, sd = 1.72, max = 10) # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9837419/
-reporting_delay <- LogNormal(mean = 2, sd = 1, max = 10)
+
+# Reporting delays
+reporting_delay <- LogNormal(meanlog = 0.58, sd = 0.47, max = 10) # mean = 2, sd = 1
+
+# Total delays
 delay <- incubation_period + reporting_delay
-rt_prior <- list(mean = 1, sd = 0.5)
+
+# Rt prior
+rt_prior <- LogNormal(meanlog = 0.69, sdlog = 0.05) # mean = 2, sd = 0.1
 
 # Check if forecasting is being done for daily data or weekly. Will be used to
 # turn on/off week effect below; week effect is off for the weekly accumulated data.
