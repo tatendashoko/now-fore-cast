@@ -112,8 +112,7 @@ divergences_plt <-
     ggplot(diagnostics_dt_long[ess_type == "tail"], # Only plotting ESS tail
            aes(x = date,
                y = ess_value,
-               color = type#,
-               # linetype = type
+               color = type
            )
     ) +
     geom_line(aes(color = type)) +
@@ -121,15 +120,6 @@ divergences_plt <-
     scale_y_log10() +
     scale_x_date(NULL, date_breaks = "month", date_labels = "%b '%y") +
     scale_color_brewer(na.translate = FALSE, palette = "Dark2") +
-    # scale_color_manual(
-    #     values = c("daily" = "#1F77B4", "weekly" = "#FF7F0E"),
-    #     breaks = c("daily", "weekly"),
-    #     na.translate = FALSE
-    # ) +
-    # scale_linetype_manual(
-    #     values = c("daily" = "solid", "weekly" = "dashed"),
-    #     breaks = c("daily", "weekly")
-    # ) +
     labs(
         # title = "Effective sample size per second",
         x = "Date",
