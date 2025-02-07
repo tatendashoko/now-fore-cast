@@ -1,4 +1,5 @@
 library(EpiNow2)
+library(epiparameter)
 library(data.table)
 library(parallel)
 library(bayesplot)
