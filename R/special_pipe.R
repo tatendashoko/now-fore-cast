@@ -138,8 +138,7 @@ res_dt <- lapply(slides, \(slide) {
 			timing = list(
 				data.table(slide = slide, timing = run_time)
 			),
-			diagnostics = list(diagnostics),
-			fit = ifelse(run_time < lubridate::duration(5), list(out$estimates$fit), list(NA)) # Only save the fit if the runtime is less than 5 secs (for memory reasons; the fits are massive = 27 Gb ish)
+			diagnostics = list(diagnostics)
 		)
 	} else {
 		empty_forecast <- data.table(
@@ -161,8 +160,7 @@ res_dt <- lapply(slides, \(slide) {
 				"max_treedepth" = NA,
 				"no_at_max_treedepth" = NA,
 				"per_at_max_treedepth" = NA
-			),
-			fit = list(NA)
+			)
 			)
 		)
 	}
