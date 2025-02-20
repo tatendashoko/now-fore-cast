@@ -13,17 +13,19 @@ dt <- readRDS(.args[1])[, .(date = as.Date(date), confirm)][!is.na(confirm)]
 
 # EpiNow wants to work in terms of days, so we're going to pretend
 # as if weeks are days
+dt[, orig_date := date]
 
-orig_dates <- dt$date
-new_dates <- seq.Date(
-  from = orig_dates[1],
+fake_daily_dates <- seq.Date(
+  from = dt$orig_date[1],
   by = "day",
-  length.out = length(orig_dates)
+  length.out = length(dt$orig_date)
 )
-dt$date <- new_dates
 
-train_window <- 10
-test_window <- 2
+dt$date <- fake_daily_dates
+
+# Train and forecast windows
+train_window <- 10 # 10 weeks
+test_window <- 2 # 2 weeks
 
 slides <- seq(0, dt[, .N - (train_window + test_window)], by = test_window)
 
