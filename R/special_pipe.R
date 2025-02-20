@@ -37,7 +37,7 @@ incubation_period <- LogNormal(mean = 5 / 7, sd = 1 / 7, max = 14 / 7)
 generation_time <- Gamma(mean = 7.12 / 7, sd = 1.72 / 7, max = 10 / 7)
 reporting_delay <- LogNormal(mean = 2 / 7, sd = 1 / 7, max = 10 / 7)
 delay <- incubation_period + reporting_delay
-rt_prior <- list(mean = 1, sd = 0.5)
+rt_prior <- LogNormal(mean = 1, sd = 0.5)
 
 # Observation model
 obs <- obs_opts(
@@ -119,7 +119,7 @@ res_dt <- lapply(slides, \(slide) {
 			generation_time = generation_time_opts(generation_time),
 			delays = delay_opts(delay),
 			rt = rt_opts(prior = rt_prior),
-			horizon = test_window,
+			forecast = forecast_opts(horizon = test_window),
 			obs = obs,
 			stan = so
 		)
