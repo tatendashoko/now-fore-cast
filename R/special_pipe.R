@@ -168,6 +168,22 @@ res_dt <- lapply(slides, \(slide) {
 	}
 }) |> rbindlist()
 
-## TODO: reach into res_dt and update forecast using orig_dates
+# Reach into res_dt and update forecast as follows:
+# - replace the fake dates with orig_dates by doing a merge on date
+# - Remove "confirm" and "date" which was fake
+res_dt[,
+       forecast := lapply(forecast, function(x) {
+           merge(x, dt)
+       })]
 
+res_dt[,
+       forecast := lapply(forecast, function(x) {
+           x[, date := orig_date
+           ][, `:=`(
+               orig_date = NULL,
+               confirm = NULL
+           )]
+       })]
+
+# Save output
 res_dt |> saveRDS(tail(.args, 1))
