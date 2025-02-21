@@ -3,6 +3,8 @@ library(data.table)
 library(parallel)
 library(bayesplot)
 
+options(mc.cores = parallel::detectCores() - 1)
+
 .args <- if (interactive()) c(
   "local/data/weekly_GP.rds",
   "local/output/forecast_special_GP.rds"
@@ -48,7 +50,6 @@ obs <- obs_opts(
 )
 
 so <- stan_opts(
-	cores = parallel::detectCores() - 2,
 	samples = 5000,
 	control = list(adapt_delta = 0.999, stepsize = 0.1)
 )
