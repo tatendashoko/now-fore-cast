@@ -59,14 +59,14 @@ so <- stan_opts(
 trim_leading_zero <- function (init_dt) { 
 	first_non_zero <- init_dt[, which.max(confirm != 0)]
 	if (first_non_zero == 1) {
-		return(rbind(init_dt[1, .(date = date - 1, confirm = 0)], init_dt))
+		return(rbind(init_dt[1, .(date = date - 1, confirm = 0, orig_date = orig_date - 7)], init_dt))
 	} else {
 		# get all the zeros
 		zeros <- init_dt[, c(which(confirm == 0), .N)]
 		# find the last one before the first non-zero
 		from <- which.max(zeros > first_non_zero) - 1L
 		if (from == 0) {
-			return(rbind(init_dt[1, .(date = date - 1, confirm = 0)], init_dt))
+			return(rbind(init_dt[1, .(date = date - 1, confirm = 0, orig_date = orig_date - 7)], init_dt))
 		} else {
 			return(init_dt[zeros[from]:.N])
 		}
