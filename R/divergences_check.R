@@ -5,21 +5,23 @@ library(parallel)
 library(bayesplot)
 
 .args <- if (interactive()) c(
+  "local/data/daily_EC.rds",
   "local/data/weekly_EC.rds",
   "local/output/TODO.rds"
 ) else commandArgs(trailingOnly = TRUE)
 
 # inflate as.Date, because EpiNow2 seems to prefer Date over IDate
-dt <- readRDS(.args[1])[, .(date = as.Date(date), confirm)]
+daily_dt <- readRDS(.args[1])[, .(date = as.Date(date), confirm)]
+weekly_dt <- readRDS(.args[1])[, .(date = as.Date(date), confirm)]
 
 # EpiNow wants to work in terms of days, so we're going to pretend
 # as if weeks are days
-rescale_dt <- dt[!is.na(confirm)][, orig_date := date]
+rescale_dt <- weekly_dt[!is.na(confirm)][, orig_date := date]
 
 train_window <- 7*10
 test_window <- 7*2
 
-slides <- seq(0, dt[, .N - (train_window + test_window)], by = test_window)
+slides <- seq(0, daily_dt[, .N - (train_window + test_window)], by = test_window)
 rescale_slides <- seq(0, rescale_dt[, .N - (train_window/7 + test_window/7)], by = test_window/7)
 
 # TODO @james pick out some useful ones?
