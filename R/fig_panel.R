@@ -198,14 +198,17 @@ diagnostics_dt_complete <- merge(
 
 # Reshape the ESS per sec columns into a single column for plotting
 diagnostics_dt_long <- melt(
-    diagnostics_dt_complete, 
+    diagnostics_dt_complete,
     measure.vars = c("fit_ess_basic_ps", "fit_ess_bulk_ps", "fit_ess_tail_ps"),
     variable.name = "ess_type",
     value.name = "ess_value"
 )
 
+# Shorten ess_type values
+diagnostics_dt_long[, ess_type := gsub("fit_ess_(.*)_ps", "\\1", ess_type)]
+
 # Plot
-divergences_plt <- 
+diagnostics_plt <-
     ggplot(diagnostics_dt_long[ess_type == "tail"], # Only plotting ESS tail
            aes(x = date,
                y = ess_value,
@@ -230,8 +233,10 @@ divergences_plt <-
     ) +
     theme_minimal()
 
+diagnostics_plt
+
 # Patchwork
-panel_fig <- (cases_plt / score_plt / divergences_plt) +
+panel_fig <- (cases_plt / score_plt / diagnostics_plt) +
     plot_annotation(title = paste(daily_cases$province[1])) &
     theme_minimal() &
     scale_x_date(NULL, date_breaks = "month", date_labels = "%b '%y") &
