@@ -36,10 +36,18 @@ incubation_period <- LogNormal(mean = 5 / 7, sd = 1 / 7, max = 14 / 7)
 # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7201952/
 # generation_time <- LogNormal(mean = 5.2, sd = 1.72, max = 10)
 # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9837419/
-generation_time <- Gamma(mean = 7.12 / 7, sd = 1.72 / 7, max = 10 / 7)
-reporting_delay <- LogNormal(mean = 2 / 7, sd = 1 / 7, max = 10 / 7)
+
+# Generation period
+generation_time <- Gamma(mean = 7.12 / 7, sd = 1.72 / 7, max = 10 / 7) # mean and sd are more intuitive for rescaling
+
+# Reporting delays
+reporting_delay <- LogNormal(mean = 2 / 7, sd = 1 / 7, max = 10 / 7) # mean and sd are more intuitive for rescaling
+
+# Total delays
 delay <- incubation_period + reporting_delay
-rt_prior <- LogNormal(mean = 1, sd = 0.5)
+
+# Rt prior
+rt_prior <- LogNormal(meanlog = 0.69, sdlog = 0.05) # mean = 2, sd = 0.1
 
 # Observation model
 obs <- obs_opts(
