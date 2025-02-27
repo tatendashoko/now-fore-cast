@@ -10,23 +10,19 @@ library(data.table)
 }
 
 # Get diagnostic data
-diagnostics_daily_fits <- readRDS(.args[1])$diagnostics |> rbindlist()
-diagnostics_weekly_fits <- readRDS(.args[2])$diagnostics |> rbindlist()
-diagnostics_special_fits <- readRDS(.args[3])$diagnostics |> rbindlist()
+daily_dt <- readRDS(.args[1])$diagnostics |> rbindlist()
+weekly_dt <- readRDS(.args[2])$diagnostics |> rbindlist()
+special_dt <- readRDS(.args[3])$diagnostics |> rbindlist()
 
 # Create groupable data for the plots
-diagnostics_daily_fits$type <- "daily"
-diagnostics_weekly_fits$type <- "weekly"
-diagnostics_special_fits$type <- "rescale"
-
-# Merge
-diagnostics_dt_combined <- rbindlist(
-    list(
-        diagnostics_daily_fits,
-        diagnostics_weekly_fits,
-        diagnostics_special_fits
-        ),
-        fill = TRUE
+daily_dt$type <- "daily"
+weekly_dt$type <- "weekly"
+special_dt$type <- "rescale"
+diagnostics_dt_combined <- rbind(
+    daily_dt,
+    weekly_dt,
+    special_dt,
+    fill = TRUE
 )
 
 # Calculate ESS per second
