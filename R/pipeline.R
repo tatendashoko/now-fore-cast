@@ -179,7 +179,7 @@ res_dt <- lapply(slides, \(slide) {
 		        data.table(
 		            slide = slide,
 		            crude_run_time = crude_run_time,
-		            stan_elapsed_time := stan_elapsed_time
+		            stan_elapsed_time = stan_elapsed_time
 		        )
 		    ),
 		    diagnostics = list(diagnostics),
@@ -210,8 +210,7 @@ res_dt <- lapply(slides, \(slide) {
 				"ess_bulk" = NA,
 				"ess_tail" = NA,
 				"stan_elapsed_time" = NA
-			),
-			fit = list(NA)
+			)
 			)
 		)
 	}
