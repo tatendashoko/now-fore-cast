@@ -135,7 +135,13 @@ runtimes_special_dt <- runtimes_special_dt[
 ]
 
 # Combine the daily and weekly runtimes
-timing_dt_combined <- rbind(runtimes_daily_dt, runtimes_weekly_dt, runtimes_special_dt)
+timing_dt_combined <- rbindlist(
+    list(runtimes_daily_dt,
+         runtimes_weekly_dt,
+         runtimes_special_dt
+    ),
+    fill = TRUE
+)
 
 # Remove slide
 timing_dt_combined[, slide := NULL]
