@@ -217,7 +217,7 @@ divergences_plt <-
     labs(
         # title = "Effective sample size per second",
         x = "Date",
-        y = "ESS per sec (log10)",
+        y = "ESS tail per sec (log10)",
         color = "Forecast scale",
         linetype = "Data"
     ) +
