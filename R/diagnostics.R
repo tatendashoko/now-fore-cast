@@ -1,12 +1,10 @@
 library(data.table)
 
 .args <- if (interactive()) {
-    c(file.path(
-        "local/output",
-        c("forecast_daily_EC.rds", "forecast_weekly_EC.rds", "forecast_special_EC.rds")
-    ),
-    file.path("local/output", "diagnostics_EC.csv")
-    )
+	c(
+		file.path("local/output", c("forecast_daily_GP.rds", "forecast_weekly_GP.rds", "forecast_special_GP.rds")),
+		file.path("local/output", "diagnostics_GP.csv")
+	)
 } else {
     commandArgs(trailingOnly = TRUE)
 }
