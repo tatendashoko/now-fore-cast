@@ -3,9 +3,9 @@ library(data.table)
 library(scoringutils)
 
 .args <- if (interactive()) c(
-  file.path("local", "data", c("daily_EC.rds", "weekly_EC.rds")),
-  file.path("local", "output", c("forecast_daily_EC.rds", "forecast_weekly_EC.rds")),
-  file.path("local", "output", "score_EC.rds")
+  file.path("local", "data", c("daily_GP.rds", "weekly_GP.rds")),
+  file.path("local", "output", c("forecast_daily_GP.rds", "forecast_weekly_GP.rds", "forecast_special_GP.rds")),
+  file.path("local", "output", "score_GP.rds")
 ) else commandArgs(trailingOnly = TRUE)
 
 # True data
@@ -14,6 +14,7 @@ weekly_ref_dt <- readRDS(.args[2]) |> setnames("confirm", "true_value")
 # Forecasts
 daily_fore_dt <- readRDS(.args[3])$forecast |> rbindlist() |> setnames("value", "prediction")
 weekly_fore_dt <- readRDS(.args[4])$forecast |> rbindlist() |> setnames("value", "prediction")
+special_fore_dt <- readRDS(.args[5])$forecast |> rbindlist() |> setnames("value", "prediction")
 
 score_dt <- rbind(
 # daily forecast vs daily data
@@ -57,6 +58,16 @@ score_dt <- rbind(
                                                         .(date, prediction = c(csum[1], diff(csum)), true_value), by = .(sample, slide)
 ] |> score())[,
               .(date = min(date), crps = mean(crps), forecast = "weekly", data = "weekly"),
+              by = slide
+],
+
+# weekly-scale forecasts vs weekly data
+(special_fore_dt[
+  weekly_ref_dt, on = .(date),
+  .(sample, slide, date, prediction, true_value),
+  nomatch = 0
+] |> score())[,
+              .(date = min(date), crps = mean(crps), forecast = "rescale", data = "weekly"),
               by = slide
 ]
 
