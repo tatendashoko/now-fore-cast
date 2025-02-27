@@ -92,7 +92,7 @@ alldvswfigs: $(patsubst %,${FIGDIR}/daily_vs_weekly_%.png,${PROVINCES})
 
 allbenchmarkfigs: $(patsubst %,${FIGDIR}/benchmarks_%.png,${PROVINCES})
 
-allpanelfigs: $(patsubst %,${FIGDIR}/panel_fig_%.png,${PROVINCES})
+allpanelfigs: $(patsubst %,${FIGDIR}/fig_panel_%.png,${PROVINCES})
 
 ${OUTDIR}/forecast_%.rds: R/pipeline.R ${DATDIR}/%.rds | ${OUTDIR}
 	$(call R)
