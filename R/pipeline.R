@@ -34,8 +34,8 @@ incubation_params <- get_parameters(sars_cov_incubation_dist)
 incubation_max <- round(quantile(sars_cov_incubation_dist, 0.999)) # Upper 99.9% range needed for EpiNow2
 
 incubation_period <- LogNormal(
-    meanlog = sars_cov_incubation_dist[["meanlog"]],
-    sdlog = sars_cov_incubation_dist[["sdlog"]],
+    meanlog = incubation_params[["meanlog"]],
+    sdlog = incubation_params[["sdlog"]],
     max = incubation_max
 ) # doi:10.3390/jcm9020538 obtained from epiparameter by running 
 
@@ -43,7 +43,7 @@ incubation_period <- LogNormal(
 generation_time <- Gamma(mean = 7.12, sd = 1.72, max = 10) # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9837419/
 
 # Reporting delays
-reporting_delay <- LogNormal(meanlog = 0.58, sd = 0.47, max = 10) # mean = 2, sd = 1
+reporting_delay <- LogNormal(meanlog = 0.58, sdlog = 0.47, max = 10) # mean = 2, sd = 1
 
 # Total delays
 delay <- incubation_period + reporting_delay
@@ -155,7 +155,7 @@ res_dt <- lapply(slides, \(slide) {
 			generation_time = generation_time_opts(generation_time),
 			delays = delay_opts(delay),
 			rt = rt_opts(prior = rt_prior),
-			horizon = test_window,
+			forecast = forecast_opts(horizon = test_window),
 			obs = obs,
 			stan = stan
 		)
