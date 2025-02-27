@@ -5,7 +5,12 @@ library(patchwork)
 .args <- if (interactive()) c(
     file.path("local", "data", c("daily_GP.rds", "weekly_GP.rds")), # cases
     file.path("local", "output", "score_GP.rds"), # scores
-    file.path("local", "output", c("forecast_daily_GP.rds", "forecast_weekly_GP.rds", "forecast_special_GP.rds")), # forecasts (also contains timing)
+    file.path("local", "output",
+              c("forecast_daily_GP.rds",
+                "forecast_weekly_GP.rds",
+                "forecast_special_GP.rds"
+              )
+    ), # forecasts (also contains timing)
     file.path("local", "output", "diagnostics_GP.csv"), # diagnostics
     file.path("local", "figures", "panel_fig_GP.png") # diagnostics
 ) else commandArgs(trailingOnly = TRUE)
