@@ -84,32 +84,51 @@ trim_leading_zero <- function (init_dt) {
 #'
 #' @return A data.table containing the summarised diagnostics
 get_rstan_diagnostics <- function(fit) {
-	if (inherits(fit, "stanfit")) {
-		np <- bayesplot::nuts_params(fit)
-		divergent_indices <- np$Parameter == "divergent__"
-		treedepth_indices <- np$Parameter == "treedepth__"
-		diagnostics <- data.table(
-			"samples" = nrow(np) / length(unique(np$Parameter)),
-			"max_rhat" = round(max(bayesplot::rhat(fit), na.rm = TRUE), 3),
-			"divergent_transitions" = sum(np[divergent_indices, ]$Value),
-			"per_divergent_transitions" = mean(np[divergent_indices, ]$Value),
-			"max_treedepth" = max(np[treedepth_indices, ]$Value)
-		)
-		diagnostics[, no_at_max_treedepth :=
-									sum(np[treedepth_indices, ]$Value == max_treedepth)
-		][, per_at_max_treedepth := no_at_max_treedepth / samples]
-	} else{
-		diagnostics <- data.table(
-			"samples" = NA,
-			"max_rhat" = NA,
-			"divergent_transitions" = NA,
-			"per_divergent_transitions" = NA,
-			"max_treedepth" = NA,
-			"no_at_max_treedepth" = NA,
-			"per_at_max_treedepth" = NA
-		)
-	}
-	return(diagnostics[])	
+    if (inherits(fit, "stanfit")) {
+        np <- bayesplot::nuts_params(fit)
+        divergent_indices <- np$Parameter == "divergent__"
+        treedepth_indices <- np$Parameter == "treedepth__"
+        # Calculating ESS (basic, bulk, and tail)
+        # ESS can only be calculated on the extracted variable in the form of a matrix with dimensions iterations x chains
+        # Extract the infections variable as that is used for forecasting
+        reports_posterior <- posterior::extract_variable_array(
+            posterior::as_draws_array(fit),
+            "reports" # NB: NEEDS REVIEW; is it rather infections??
+        )
+        # Calculate the different types of ess (basic, bulk, and tail)
+        fit_ess_basic <- posterior::ess_basic(reports_posterior)
+        fit_ess_bulk <- posterior::ess_bulk(reports_posterior)
+        fit_ess_tail <- posterior::ess_tail(reports_posterior)
+
+        diagnostics <- data.table(
+            "samples" = nrow(np) / length(unique(np$Parameter)),
+            "max_rhat" = round(max(bayesplot::rhat(fit), na.rm = TRUE), 3),
+            "divergent_transitions" = sum(np[divergent_indices, ]$Value),
+            "per_divergent_transitions" = mean(np[divergent_indices, ]$Value),
+            "max_treedepth" = max(np[treedepth_indices, ]$Value),
+            "ess_basic" = fit_ess_basic,
+            "ess_bulk" = fit_ess_bulk,
+            "ess_tail" = fit_ess_tail
+        )
+        diagnostics[, no_at_max_treedepth :=
+                        sum(np[treedepth_indices, ]$Value == max_treedepth)
+        ][, per_at_max_treedepth := no_at_max_treedepth / samples]
+    } else{
+        diagnostics <- data.table(
+            "samples" = NA,
+            "max_rhat" = NA,
+            "divergent_transitions" = NA,
+            "per_divergent_transitions" = NA,
+            "max_treedepth" = NA,
+            "no_at_max_treedepth" = NA,
+            "per_at_max_treedepth" = NA,
+            "ess_basic" = NA,
+            "ess_bulk" = NA,
+            "ess_tail" = NA,
+            "stan_elapsed_time" = NA
+        )
+    }
+    return(diagnostics[])	
 }
 
 res_dt <- lapply(slides, \(slide) {
@@ -130,40 +149,53 @@ res_dt <- lapply(slides, \(slide) {
 			.(date, sample, value, slide = slide)
 			]
 		# Extract the diagnostic information
-		diagnostics <- get_rstan_diagnostics(out$estimates$fit)[, slide := slide]
-		# Extract the timing information
-		run_time <- out$timing
+		diagnostics <- get_rstan_diagnostics(out$estimates$fit)
+		diagnostics <- diagnostics[, slide := slide]
+		# Extract and append stan's internal timing of the model fitting process.
+		stan_elapsed_time <- sum(rstan::get_elapsed_time(out$estimates$fit))
+		diagnostics <- diagnostics[, "stan_elapsed_time" := stan_elapsed_time] #  NB: NEEDS REVIEW: Currently computes total time taken for warmup and sampling for all chains.
+		# Extract the crude timing measured by epinow()
+		crude_run_time <- out$timing
 		# Combine the forecast, timing and diagnostics
 		forecast_dt <- data.table(
-			forecast = list(forecasts),
-			timing = list(
-				data.table(slide = slide, timing = run_time)
-			),
-			diagnostics = list(diagnostics)
+		    forecast = list(forecasts),
+		    timing = list(
+		        data.table(
+		            slide = slide,
+		            crude_run_time = crude_run_time,
+		            stan_elapsed_time = stan_elapsed_time
+		        )
+		    ),
+		    diagnostics = list(diagnostics)
 		)
 	} else {
-		empty_forecast <- data.table(
-			date = dt[train_window + slide, date + seq_len(test_window)],
-			sample = NA_integer_, value = NA_integer_, slide = slide
-		)
-		res <- data.table(
-			forecast = list(empty_forecast),
-			timing = list(data.table(
-				slide = slide,
-				timing = lubridate::as.duration(NA))
-				),
-			diagnostics = list(data.table(
-				slide = slide,
-				"samples" = NA,
-				"max_rhat" = NA,
-				"divergent_transitions" = NA,
-				"per_divergent_transitions" = NA,
-				"max_treedepth" = NA,
-				"no_at_max_treedepth" = NA,
-				"per_at_max_treedepth" = NA
-			)
-			)
-		)
+	    empty_forecast <- data.table(
+	        date = dt[train_window + slide, date + seq_len(test_window)],
+	        sample = NA_integer_, value = NA_integer_, slide = slide
+	    )
+	    res <- data.table(
+	        forecast = list(empty_forecast),
+	        timing = list(data.table(
+	            slide = slide,
+	            crude_run_time = lubridate::as.duration(NA),
+	            stan_elapsed_time = lubridate::as.duration(NA))
+	        ),
+	        diagnostics = list(data.table(
+	            slide = slide,
+	            "samples" = NA,
+	            "max_rhat" = NA,
+	            "divergent_transitions" = NA,
+	            "per_divergent_transitions" = NA,
+	            "max_treedepth" = NA,
+	            "no_at_max_treedepth" = NA,
+	            "per_at_max_treedepth" = NA,
+	            "ess_basic" = NA,
+	            "ess_bulk" = NA,
+	            "ess_tail" = NA,
+	            "stan_elapsed_time" = NA
+	        )
+	        )
+	    )
 	}
 }) |> rbindlist()
 
