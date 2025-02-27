@@ -26,11 +26,11 @@ diagnostics_dt_combined <- rbind(
 )
 
 # Calculate ESS per second
-# diagnostics_dt_combined[, `:=`(
-#     ess_basic_ps = ess_basic/stan_elapsed_time,
-#     ess_bulk_ps = ess_bulk/stan_elapsed_time,
-#     ess_tail_ps = ess_tail/stan_elapsed_time)
-# ]
+diagnostics_dt_combined[, `:=`(
+    ess_basic_ps = ess_basic/stan_elapsed_time,
+    ess_bulk_ps = ess_bulk/stan_elapsed_time,
+    ess_tail_ps = ess_tail/stan_elapsed_time)
+]
 
 # Save as csv
 write.csv(diagnostics_dt_combined, tail(.args, 1), row.names = FALSE)
