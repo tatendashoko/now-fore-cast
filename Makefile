@@ -74,7 +74,7 @@ ${FIGDIR}/incidence.png: R/fig_incidence.R ${DATDIR}/intermediate.rds | ${FIGDIR
 ${FIGDIR}/daily_vs_weekly_%.png: R/fig_daily_vs_weekly.R ${DATDIR}/daily_%.rds ${DATDIR}/weekly_%.rds | ${FIGDIR}
 	$(call R)
 	
-${FIGDIR}/benchmarks_%.png: R/fig_timing.R ${OUTDIR}/forecast_daily_%.rds ${OUTDIR}/forecast_weekly_%.rds | ${FIGDIR}
+${FIGDIR}/benchmarks_%.png: R/fig_timing.R ${OUTDIR}/forecast_daily_%.rds ${OUTDIR}/forecast_weekly_%.rds ${OUTDIR}/forecast_special_%.rds | ${FIGDIR}
 	$(call R)
 
 ${FIGDIR}/panel_fig_%.png: \
@@ -84,6 +84,7 @@ ${FIGDIR}/panel_fig_%.png: \
 	${OUTDIR}/score_%.rds \
 	${OUTDIR}/forecast_daily_%.rds \
 	${OUTDIR}/forecast_weekly_%.rds \
+	${OUTDIR}/forecast_special_%.rds \
 	${OUTDIR}/diagnostics_%.csv | ${FIGDIR}
 	$(call R)
 

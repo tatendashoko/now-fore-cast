@@ -4,8 +4,8 @@ library(patchwork)
 
 .args <- if (interactive()) c(
     file.path("local", "data", c("daily_GP.rds", "weekly_GP.rds")), # cases
-    file.path("local", "output", "score_EC.rds"), # scores
-    file.path("local", "output", c("forecast_daily_GP.rds", "forecast_weekly_GP.rds")), # forecasts (also contains timing)
+    file.path("local", "output", "score_GP.rds"), # scores
+    file.path("local", "output", c("forecast_daily_GP.rds", "forecast_weekly_GP.rds", "forecast_special_GP.rds")), # forecasts (also contains timing)
     file.path("local", "output", "diagnostics_GP.csv"), # diagnostics
     file.path("local", "figures", "panel_fig_GP.png") # diagnostics
 ) else commandArgs(trailingOnly = TRUE)
@@ -16,13 +16,33 @@ daily_cases <- readRDS(.args[1])
 weekly_cases <- readRDS(.args[2])
 # Scores
 scores <- readRDS(.args[3])
-# Get slide <-> date dictionary
+# Forecasts
 forecasts_daily_dt <- readRDS(.args[4])$forecast |>
     rbindlist()
-
+forecasts_daily_dt[, type := "daily"]
+forecasts_weekly_dt <- readRDS(.args[5])$forecast |>
+    rbindlist()
+forecasts_weekly_dt[, type := "weekly"]
+# Get slide <-> date dictionary
 slide_dates_dictionary <- forecasts_weekly_dt[, .SD[1], by = "slide", .SDcols = c("date")]
+
+# Run times
+# Daily
+runtimes_daily_dt <- readRDS(.args[4])$timing |>
+    rbindlist()
+
+runtimes_daily_dt[, type := "daily"]
+# Weekly
+runtimes_weekly_dt <- readRDS(.args[5])$timing |>
+    rbindlist()
+runtimes_weekly_dt[, type := "weekly"]
+# Rescaled weekly scale
+runtimes_special_dt <- readRDS(.args[6])$timing |>
+    rbindlist()
+runtimes_special_dt[, type := "rescale"]
+
 # Diagnostics
-diagnostics_dt <- fread(.args[6])
+diagnostics_dt <- fread(.args[7])
 
 # Other data
 train_window <- 70 # This has to be the same as the one in the pipeline.R script
@@ -83,6 +103,80 @@ score_plt <- ggplot(data = scores_complete) +
          color = "Forecast scale"
     )
 
+score_plt
+
+# Run times
+# Daily data
+# Add dates by slide
+dates_by_slide <- scores[forecast == "daily" & data == "daily"][, .(slide, date)]
+
+runtimes_daily_dt <- runtimes_daily_dt[
+    dates_by_slide,
+    on = "slide"
+]
+
+# Add dates by slide
+runtimes_weekly_dt <- runtimes_weekly_dt[
+    dates_by_slide,
+    on = "slide"
+]
+
+runtimes_special_dt <- runtimes_special_dt[
+    dates_by_slide,
+    on = "slide"
+]
+
+# Combine the daily and weekly runtimes
+timing_dt_combined <- rbind(runtimes_daily_dt, runtimes_weekly_dt, runtimes_special_dt)
+
+# Remove slide
+timing_dt_combined[, slide := NULL]
+
+# Round times
+timing_dt_combined[, timing := round(lubridate::as.duration(timing), 1)]
+
+# reshape the data to wide
+timing_dt_reshaped <- timing_dt_combined |>
+    dcast(date ~ type, value.var = "timing")
+
+# Add categorical indicator of comparison
+timing_dt_reshaped[, relative_speed := ifelse(daily > weekly, "Daily_worse", "Weekly_worse")]
+
+# Add missing dates from case data for alignment
+timing_dt_complete <- merge(
+    complete_dates_dt,     
+    timing_dt_reshaped, 
+    by = "date",  
+    all.y = FALSE, 
+    all.x = TRUE 
+)
+
+# @james TODO: not sure how to think about this w/ addition of rescaled forecast
+
+## Runtimes plot
+runtimes_plt <- ggplot() +
+	geom_point(data = timing_dt_combined,
+	    aes(x = date,
+	        y = timing,
+	        shape = type
+	    )
+	) +
+    geom_linerange(
+        data = timing_dt_complete,
+        aes(x = date,
+            ymin = daily,
+            ymax = weekly,
+            color = relative_speed
+        )
+    ) +
+    # scale_y_continuous(sec.axis = sec_axis(~ . + 10000)) +
+    scale_x_date(NULL, date_breaks = "month", date_labels = "%b '%y") +
+    scale_color_brewer(na.translate = FALSE, palette = "Accent") +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+    labs(shape = "forecast", y = "run time (secs)")
+
+runtimes_plt
+
 ### Diagnostics
 # Add the dates by slide
 diagnostics_dt <- diagnostics_dt[
@@ -102,7 +196,7 @@ diagnostics_dt_complete <- merge(
 # Reshape the ESS per sec columns into a single column for plotting
 diagnostics_dt_long <- melt(
     diagnostics_dt_complete, 
-    measure.vars = c("ess_basic_ps", "ess_bulk_ps", "ess_tail_ps"),
+    measure.vars = c("fit_ess_basic_ps", "fit_ess_bulk_ps", "fit_ess_tail_ps"),
     variable.name = "ess_type",
     value.name = "ess_value"
 )
