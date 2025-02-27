@@ -143,42 +143,42 @@ timing_dt_reshaped <- timing_dt_combined |>
     dcast(date ~ type, value.var = "timing")
 
 # Add categorical indicator of comparison
-timing_dt_reshaped[, relative_speed := ifelse(daily > weekly, "Daily_worse", "Weekly_worse")]
-
-# Add missing dates from case data for alignment
-timing_dt_complete <- merge(
-    complete_dates_dt,     
-    timing_dt_reshaped, 
-    by = "date",  
-    all.y = FALSE, 
-    all.x = TRUE 
-)
+# timing_dt_reshaped[, relative_speed := ifelse(daily > weekly, "Daily_worse", "Weekly_worse")]
+# 
+# # Add missing dates from case data for alignment
+# timing_dt_complete <- merge(
+#     complete_dates_dt,     
+#     timing_dt_reshaped, 
+#     by = "date",  
+#     all.y = FALSE, 
+#     all.x = TRUE 
+# )
 
 # @james TODO: not sure how to think about this w/ addition of rescaled forecast
 
 ## Runtimes plot
-runtimes_plt <- ggplot() +
-	geom_point(data = timing_dt_combined,
-	    aes(x = date,
-	        y = timing,
-	        shape = type
-	    )
-	) +
-    geom_linerange(
-        data = timing_dt_complete,
-        aes(x = date,
-            ymin = daily,
-            ymax = weekly,
-            color = relative_speed
-        )
-    ) +
-    # scale_y_continuous(sec.axis = sec_axis(~ . + 10000)) +
-    scale_x_date(NULL, date_breaks = "month", date_labels = "%b '%y") +
-    scale_color_brewer(na.translate = FALSE, palette = "Accent") +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-    labs(shape = "forecast", y = "run time (secs)")
-
-runtimes_plt
+# runtimes_plt <- ggplot() +
+# 	geom_point(data = timing_dt_combined,
+# 	    aes(x = date,
+# 	        y = timing,
+# 	        shape = type
+# 	    )
+# 	) +
+#     geom_linerange(
+#         data = timing_dt_complete,
+#         aes(x = date,
+#             ymin = daily,
+#             ymax = weekly,
+#             color = relative_speed
+#         )
+#     ) +
+#     # scale_y_continuous(sec.axis = sec_axis(~ . + 10000)) +
+#     scale_x_date(NULL, date_breaks = "month", date_labels = "%b '%y") +
+#     scale_color_brewer(na.translate = FALSE, palette = "Accent") +
+#     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+#     labs(shape = "forecast", y = "run time (secs)")
+# 
+# runtimes_plt
 
 ### Diagnostics
 # Add the dates by slide
