@@ -77,7 +77,7 @@ ${FIGDIR}/daily_vs_weekly_%.png: R/fig_daily_vs_weekly.R ${DATDIR}/daily_%.rds $
 ${FIGDIR}/benchmarks_%.png: R/fig_timing.R ${OUTDIR}/forecast_daily_%.rds ${OUTDIR}/forecast_weekly_%.rds ${OUTDIR}/forecast_special_%.rds | ${FIGDIR}
 	$(call R)
 
-${FIGDIR}/panel_fig_%.png: \
+${FIGDIR}/fig_panel_%.png: \
 	R/fig_panel.R \
 	${DATDIR}/daily_%.rds \
 	${DATDIR}/weekly_%.rds \
