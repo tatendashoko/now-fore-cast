@@ -1,6 +1,7 @@
 library(data.table)
 library(ggplot2)
 library(ggh4x)
+library(geomtextpath)
 library(patchwork)
 
 .args <- if (interactive()) c(
@@ -39,11 +40,38 @@ scores_ref <- scores[forecast == "daily"][, .SD, .SDcols = -c("forecast")]
 scores_rel <- scores[forecast != "daily"][scores_ref, on = .(slide, date, data), nomatch = 0]
 
 rel_plot <- ggplot(data = scores_rel) +
-    aes(x = interaction(forecast, data), y = log10(crps/i.crps)) +
+    aes(x = interaction(forecast, data), y = crps/i.crps) +
     theme_minimal() +
     geom_point(position = position_jitter(width = 0.1)) +
-    scale_x_discrete("Training Data => Target") +
-    scale_y_continuous("Log 10 (CRPS / ref CRPS)\n ref: Daily Training => Matched Outcome")
+    geom_labelsegment(
+        aes(
+            x = (as.integer(interaction(forecast, data))-1)-0.25,
+            xend = (as.integer(interaction(forecast, data))-1)+0.25,
+            y = geomean, yend = geomean, label = sprintf("~%.0fx",geomean)
+        ),
+        data = \(dt) dt[,.(geomean = exp(mean(log(crps/i.crps)))), by=.(forecast, data)],
+        color = "red", hjust = 1.1, fill = alpha("white", 0.9)
+    ) +
+    geom_texthline(
+        mapping = aes(yintercept = yint),
+        data = \(dt) dt[1, .(yint = 1)],
+        linetype = "dashed", label = "vs. daily data\n=> ... target",
+        hjust = 0
+    ) +
+    geom_text(aes(x = 0.5, y = ratio, label = perf), \(dt) dt[, .(ratio = c(10, 1/10), perf = c("worse", "better"))], vjust = 0.5, hjust = 0) +
+    coord_cartesian(ylim = 10^c(-2, 4), clip = "off") +
+    scale_x_discrete(
+        NULL, label = \(b) lapply(
+            strsplit(b,".",fixed = TRUE),
+            \(spl) sprintf("%s data => %s target", spl[1], spl[2])
+        )
+    ) +
+    scale_y_continuous(
+        "relative CRPS",
+        transform = "log10",
+        breaks = 10^c(-2:4), minor_breaks = NULL,
+        labels = \(b) fifelse(b < 1, sprintf("1/%ix", as.integer(1/b)), sprintf("%ix", as.integer(b)))
+    )
     
 
 ggsave(tail(.args, 1), rel_plot, bg = "white", width = 12, height = 6)
