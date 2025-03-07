@@ -112,7 +112,7 @@ score_plt <- ggplot(data = scores_complete) +
     facet_wrap(~data, ncol = 1, strip.position = "right") +
     labs(y = "CRPS (log10)",
          linetype = "Data",
-         color = "Forecast scale"
+         color = "Forecast target"
     )
 
 score_plt
@@ -242,7 +242,7 @@ diagnostics_plt <-
         # title = "Effective sample size per second",
         x = "Date",
         y = "ESS tail per sec (log10)",
-        color = "Forecast scale",
+        color = "Forecast target",
         linetype = "Data"
     ) +
     theme(
