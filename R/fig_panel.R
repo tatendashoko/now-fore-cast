@@ -122,40 +122,40 @@ score_plt
 # Add dates by slide
 dates_by_slide <- scores[forecast == "daily" & data == "daily"][, .(slide, date)]
 
-runtimes_daily_dt <- runtimes_daily_dt[
-    dates_by_slide,
-    on = "slide"
-]
+# runtimes_daily_dt <- runtimes_daily_dt[
+#     dates_by_slide,
+#     on = "slide"
+# ]
 
 # Add dates by slide
-runtimes_weekly_dt <- runtimes_weekly_dt[
-    dates_by_slide,
-    on = "slide"
-]
+# runtimes_weekly_dt <- runtimes_weekly_dt[
+#     dates_by_slide,
+#     on = "slide"
+# ]
 
-runtimes_special_dt <- runtimes_special_dt[
-    dates_by_slide,
-    on = "slide"
-]
+# runtimes_special_dt <- runtimes_special_dt[
+#     dates_by_slide,
+#     on = "slide"
+# ]
 
 # Combine the daily and weekly runtimes
-timing_dt_combined <- rbindlist(
-    list(runtimes_daily_dt,
-         runtimes_weekly_dt,
-         runtimes_special_dt
-    ),
-    fill = TRUE
-)
+# timing_dt_combined <- rbindlist(
+#     list(runtimes_daily_dt,
+#          runtimes_weekly_dt,
+#          runtimes_special_dt
+#     ),
+#     fill = TRUE
+# )
 
 # Remove slide
-timing_dt_combined[, slide := NULL]
+# timing_dt_combined[, slide := NULL]
 
 # Round times
-timing_dt_combined[, timing := round(lubridate::as.duration(timing), 1)]
+# timing_dt_combined[, timing := round(lubridate::as.duration(stan_elapsed_time), 1)]
 
 # reshape the data to wide
-timing_dt_reshaped <- timing_dt_combined |>
-    dcast(date ~ type, value.var = "timing")
+# timing_dt_reshaped <- timing_dt_combined |>
+#     dcast(date ~ type, value.var = "timing")
 
 # Add categorical indicator of comparison
 # timing_dt_reshaped[, relative_speed := ifelse(daily > weekly, "Daily_worse", "Weekly_worse")]
