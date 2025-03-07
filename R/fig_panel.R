@@ -36,18 +36,18 @@ slide_dates_dictionary <- forecasts_weekly_dt[, .SD[1], by = "slide", .SDcols = 
 
 # Run times
 # Daily
-runtimes_daily_dt <- readRDS(.args[4])$timing |>
-    rbindlist()
+# runtimes_daily_dt <- readRDS(.args[4])$timing |>
+#     rbindlist()
 
-runtimes_daily_dt[, type := "daily"]
+# runtimes_daily_dt[, type := "daily"]
 # Weekly
-runtimes_weekly_dt <- readRDS(.args[5])$timing |>
-    rbindlist()
-runtimes_weekly_dt[, type := "weekly"]
+# runtimes_weekly_dt <- readRDS(.args[5])$timing |>
+#     rbindlist()
+# runtimes_weekly_dt[, type := "weekly"]
 # Rescaled weekly scale
-runtimes_special_dt <- readRDS(.args[6])$timing |>
-    rbindlist()
-runtimes_special_dt[, type := "rescale"]
+# runtimes_special_dt <- readRDS(.args[6])$timing |>
+#     rbindlist()
+# runtimes_special_dt[, type := "rescale"]
 
 # Diagnostics
 diagnostics_dt <- fread(.args[7])
