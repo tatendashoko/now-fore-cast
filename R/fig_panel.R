@@ -12,7 +12,7 @@ library(patchwork)
               )
     ), # forecasts (also contains timing)
     file.path("local", "output", "diagnostics_GP.csv"), # diagnostics
-    file.path("local", "figures", "panel_fig_GP.png") # diagnostics
+    file.path("local", "figures", "fig_panel_GP.png") # diagnostics
 ) else commandArgs(trailingOnly = TRUE)
 
 # Load the raw data
