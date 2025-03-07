@@ -223,18 +223,18 @@ diagnostics_dt_long <- melt(
 diagnostics_dt_long[, ess_per_sec := ess_value/stan_elapsed_time]
 
 # Shorten ess_type values
-diagnostics_dt_long[, ess_type := gsub("ess_(.*)", "\\1", ess_type)]
+# diagnostics_dt_long[, ess_type := gsub("ess_(.*)", "\\1", ess_type)]
 
 # Plot
 diagnostics_plt <-
-    ggplot(diagnostics_dt_long[ess_type == "tail"], # Only plotting ESS tail
+    ggplot(diagnostics_dt_long[ess_type == "ess_tail"], # Only plotting ESS tail
            aes(x = date,
                y = ess_per_sec,
                color = type
            )
     ) +
-    geom_line(aes(color = type)) +
-    geom_point(size = 1) +
+    geom_line() +
+    geom_point(size = 1, aes(color = type)) +
     scale_y_log10() +
     scale_x_date(NULL, date_breaks = "month", date_labels = "%b '%y") +
     scale_color_brewer(na.translate = FALSE, palette = "Dark2") +
