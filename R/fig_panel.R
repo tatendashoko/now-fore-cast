@@ -96,16 +96,20 @@ score_plt <- ggplot(data = scores_complete) +
 	geom_line(
 	    aes(x = date,
 	        y = crps,
-	        color = forecast,
-	        linetype = data
+	        color = forecast
 	    )
 	) +
+    geom_point(
+        aes(x = date,
+            y = crps,
+            color = forecast
+        )
+    ) +
     scale_x_date(NULL, date_breaks = "month", date_labels = "%b '%y") +
     scale_y_log10() +
-    scale_linetype_manual(values = c("daily" = "solid", "weekly" = "dashed"),
-                          breaks = c("daily", "weekly")) +
     scale_color_brewer(na.translate = FALSE, palette = "Dark2") +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+    facet_wrap(~data, ncol = 1, strip.position = "right") +
     labs(y = "CRPS (log10)",
          linetype = "Data",
          color = "Forecast scale"
