@@ -141,6 +141,10 @@ get_rstan_diagnostics <- function(fit) {
 
 res_dt <- lapply(slides, \(slide) {
 	slice <- dt[seq_len(train_window) + slide] |> trim_leading_zero()
+	# Slides for fitting are in weeks but we need to rescale back to
+	# days for aligning with other scales
+	slide_rescaled <- slide * 7
+	# Fit model
 	if (slice[, .N > test_window * 2]) {
 		out <- epinow(
 			data = slice,
@@ -158,7 +162,7 @@ res_dt <- lapply(slides, \(slide) {
 			]
 		# Extract the diagnostic information
 		diagnostics <- get_rstan_diagnostics(out$estimates$fit)
-		diagnostics <- diagnostics[, slide := slide]
+		diagnostics <- diagnostics[, slide := slide_rescaled]
 		# Extract and append stan's internal timing of the model fitting process.
 		stan_elapsed_time <- sum(rstan::get_elapsed_time(out$estimates$fit))
 		diagnostics <- diagnostics[, "stan_elapsed_time" := stan_elapsed_time] #  NB: NEEDS REVIEW: Currently computes total time taken for warmup and sampling for all chains.
@@ -169,7 +173,7 @@ res_dt <- lapply(slides, \(slide) {
 		    forecast = list(forecasts),
 		    timing = list(
 		        data.table(
-		            slide = slide,
+		            slide = slide_rescaled,
 		            crude_run_time = crude_run_time,
 		            stan_elapsed_time = stan_elapsed_time
 		        )
@@ -179,17 +183,17 @@ res_dt <- lapply(slides, \(slide) {
 	} else {
 	    empty_forecast <- data.table(
 	        date = dt[train_window + slide, date + seq_len(test_window)],
-	        sample = NA_integer_, value = NA_integer_, slide = slide
+	        sample = NA_integer_, value = NA_integer_, slide = slide_rescaled
 	    )
 	    res <- data.table(
 	        forecast = list(empty_forecast),
 	        timing = list(data.table(
-	            slide = slide,
+	            slide = slide_rescaled,
 	            crude_run_time = lubridate::as.duration(NA),
 	            stan_elapsed_time = lubridate::as.duration(NA))
 	        ),
 	        diagnostics = list(data.table(
-	            slide = slide,
+	            slide = slide_rescaled,
 	            "samples" = NA,
 	            "max_rhat" = NA,
 	            "divergent_transitions" = NA,
