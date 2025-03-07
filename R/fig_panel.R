@@ -214,19 +214,22 @@ diagnostics_dt_complete <- merge(
 # Reshape the ESS per sec columns into a single column for plotting
 diagnostics_dt_long <- melt(
     diagnostics_dt_complete,
-    measure.vars = c("fit_ess_basic_ps", "fit_ess_bulk_ps", "fit_ess_tail_ps"),
+    measure.vars = c("ess_basic", "ess_bulk", "ess_tail"),
     variable.name = "ess_type",
     value.name = "ess_value"
 )
 
+# Calculate ESS per sec
+diagnostics_dt_long[, ess_per_sec := ess_value/stan_elapsed_time]
+
 # Shorten ess_type values
-diagnostics_dt_long[, ess_type := gsub("fit_ess_(.*)_ps", "\\1", ess_type)]
+diagnostics_dt_long[, ess_type := gsub("ess_(.*)", "\\1", ess_type)]
 
 # Plot
 diagnostics_plt <-
     ggplot(diagnostics_dt_long[ess_type == "tail"], # Only plotting ESS tail
            aes(x = date,
-               y = ess_value,
+               y = ess_per_sec,
                color = type
            )
     ) +
