@@ -30,7 +30,7 @@ forecasts_weekly_dt <- readRDS(.args[5])$forecast |>
 forecasts_weekly_dt[, type := "weekly"]
 forecasts_special_dt <- readRDS(.args[6])$forecast |>
     rbindlist()
-forecasts_weekly_dt[, type := "rescale"]
+forecasts_special_dt[, type := "rescale"]
 # Get slide <-> date dictionary
 slide_dates_dictionary <- forecasts_weekly_dt[, .SD[1], by = "slide", .SDcols = c("date")]
 
