@@ -2,7 +2,7 @@
 default: allscores
 
 # see example.makefile for notes on how to make this
--include local.makefile
+#-include local.makefile
 
 REFDIR ?= local
 
@@ -87,7 +87,7 @@ ${FIGDIR}/panel_fig_%.png: \
 	${OUTDIR}/diagnostics_%.csv | ${FIGDIR}
 	$(call R)
 
-${FIGDIR}/scatter_%.png: R/fig_crps.R ${OUTDIR}/score_%.rds
+${FIGDIR}/score_scatter_%.png: R/fig_crps.R ${OUTDIR}/score_%.rds
 	$(call R)
 
 alldvswfigs: $(patsubst %,${FIGDIR}/daily_vs_weekly_%.png,${PROVINCES})
@@ -96,7 +96,7 @@ allbenchmarkfigs: $(patsubst %,${FIGDIR}/benchmarks_%.png,${PROVINCES})
 
 allpanelfigs: $(patsubst %,${FIGDIR}/panel_fig_%.png,${PROVINCES})
 
-allscatterfigs: $(patsubst %,${FIGDIR}/scatter_%.png,${PROVINCES})
+allscorescatterfigs: $(patsubst %,${FIGDIR}/score_scatter_%.png,${PROVINCES})
 
 ${OUTDIR}/forecast_%.rds: R/pipeline.R ${DATDIR}/%.rds | ${OUTDIR}
 	$(call R)
