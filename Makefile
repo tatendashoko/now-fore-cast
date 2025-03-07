@@ -2,7 +2,7 @@
 default: allscores
 
 # see example.makefile for notes on how to make this
--include local.makefile
+#-include local.makefile
 
 REFDIR ?= local
 
@@ -92,8 +92,6 @@ alldvswfigs: $(patsubst %,${FIGDIR}/daily_vs_weekly_%.png,${PROVINCES})
 
 allbenchmarkfigs: $(patsubst %,${FIGDIR}/benchmarks_%.png,${PROVINCES})
 
-allpanelfigs: $(patsubst %,${FIGDIR}/fig_panel_%.png,${PROVINCES})
-
 ${OUTDIR}/forecast_%.rds: R/pipeline.R ${DATDIR}/%.rds | ${OUTDIR}
 	$(call R)
 
@@ -108,5 +106,8 @@ ${OUTDIR}/diagnostics_%.csv: R/diagnostics.R ${OUTDIR}/forecast_daily_%.rds ${OU
 
 alldiagnostics: $(patsubst %,${OUTDIR}/diagnostics_%.csv,${PROVINCES})
 
-allforecasts: $(patsubst %,${OUTDIR}/forecast_daily_%.rds,${PROVINCES} RSA) $(patsubst %,${OUTDIR}/forecast_weekly_%.rds,${PROVINCES} RSA)
+allforecasts: $(patsubst %,${OUTDIR}/forecast_daily_%.rds,${PROVINCES} RSA) $(patsubst %,${OUTDIR}/forecast_weekly_%.rds,${PROVINCES} RSA) $(patsubst %,${OUTDIR}/forecast_special_%.rds,${PROVINCES} RSA)
 allscores: $(patsubst %,${OUTDIR}/score_%.rds,${PROVINCES} RSA)
+
+# Main target
+allpanelfigs: $(patsubst %,${FIGDIR}/fig_panel_%.png,${PROVINCES})
