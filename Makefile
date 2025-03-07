@@ -88,7 +88,7 @@ ${FIGDIR}/fig_panel_%.png: \
 	${OUTDIR}/diagnostics_%.csv | ${FIGDIR}
 	$(call R)
 
-${FIGDIR}/scatter_%.png: R/fig_crps.R ${OUTDIR}/score_%.rds:
+${FIGDIR}/scatter_%.png: R/fig_crps.R ${OUTDIR}/score_%.rds
 	$(call R)
 
 alldvswfigs: $(patsubst %,${FIGDIR}/daily_vs_weekly_%.png,${PROVINCES})
