@@ -2,11 +2,14 @@
 library(data.table)
 library(scoringutils)
 
-.args <- if (interactive()) c(
-  file.path("local", "data", c("daily_GP.rds", "weekly_GP.rds")),
-  file.path("local", "output", c("forecast_daily_GP.rds", "forecast_weekly_GP.rds", "forecast_special_GP.rds")),
-  file.path("local", "output", "score_GP.rds")
-) else commandArgs(trailingOnly = TRUE)
+.args <- if (interactive()) {
+	.prov <- "GP"
+	c(
+	  sprintf(file.path("local", "data", "%s_%s.rds"), c("daily", "weekly"), .prov),
+	  sprintf(file.path("local", "output", "forecast_%s_%s.rds"), c("daily", "weekly", "special"), .prov),
+	  sprintf(file.path("local", "output", "score_%s.rds"), .prov)
+	)
+} else commandArgs(trailingOnly = TRUE)
 
 # True data
 daily_ref_dt <- readRDS(.args[1]) |> setnames("confirm", "true_value")
@@ -16,60 +19,39 @@ daily_fore_dt <- readRDS(.args[3])$forecast |> rbindlist() |> setnames("value", 
 weekly_fore_dt <- readRDS(.args[4])$forecast |> rbindlist() |> setnames("value", "prediction")
 special_fore_dt <- readRDS(.args[5])$forecast |> rbindlist() |> setnames("value", "prediction")
 
+dtextract <- function(dt, fct, dat) dt[,
+  .(date, crps, forecast = fct, data = dat),
+	by = slide
+]
+
+joinery <- function(fore_dt, ref_dt) fore_dt[
+	ref_dt, on = .(date), .(sample, slide, date, prediction, true_value),
+	nomatch = 0
+][,
+	csum := cumsum(prediction), by = .(sample, slide)
+][!is.na(true_value),
+	.(date, prediction = c(csum[1], diff(csum)), true_value),
+	by = .(sample, slide)
+] |> score(metrics = "crps")
+
+# wherever the true value is NA, we are assuming the prediction should be
+# accumulated to wherever the next observation occurs
+
 score_dt <- rbind(
 # daily forecast vs daily data
-(daily_fore_dt[
-  daily_ref_dt, on = .(date),
-  .(sample, slide, date, prediction, true_value),
-  nomatch = 0
-] |> score())[,
-  .(date = min(date), crps = mean(crps), forecast = "daily", data = "daily"),
-  by = slide
-],
+joinery(daily_fore_dt, daily_ref_dt) |> dtextract("daily", "daily"),
 
 # daily forecasts vs weekly data
-(daily_fore_dt[
-  weekly_ref_dt, on = .(date),
-  .(sample, slide, date, prediction, true_value),
-  nomatch = 0
-][, csum := cumsum(prediction), by = .(sample, slide) ][!is.na(true_value),
-  .(date, prediction = c(csum[1], diff(csum)), true_value), by = .(sample, slide)
-] |> score())[,
-  .(date = min(date), crps = mean(crps), forecast = "daily", data = "weekly"),
-  by = slide
-],
+joinery(daily_fore_dt, weekly_ref_dt) |> dtextract("daily", "weekly"),
 
 # weekly forecasts vs daily data
-(weekly_fore_dt[
-  daily_ref_dt, on = .(date),
-  .(sample, slide, date, prediction, true_value),
-  nomatch = 0
-] |> score())[,
-  .(date = min(date), crps = mean(crps), forecast = "weekly", data = "daily"),
-  by = slide
-],
+joinery(weekly_fore_dt, daily_ref_dt) |> dtextract("weekly", "daily"),
 
 # weekly forecasts vs weekly data
-(weekly_fore_dt[
-  weekly_ref_dt, on = .(date),
-  .(sample, slide, date, prediction, true_value),
-  nomatch = 0
-][, csum := cumsum(prediction), by = .(sample, slide) ][!is.na(true_value),
-                                                        .(date, prediction = c(csum[1], diff(csum)), true_value), by = .(sample, slide)
-] |> score())[,
-              .(date = min(date), crps = mean(crps), forecast = "weekly", data = "weekly"),
-              by = slide
-],
+joinery(weekly_fore_dt, weekly_ref_dt) |> dtextract("weekly", "weekly"),
 
 # weekly-scale forecasts vs weekly data
-(special_fore_dt[
-  weekly_ref_dt, on = .(date),
-  .(sample, slide, date, prediction, true_value),
-  nomatch = 0
-] |> score())[,
-              .(date = min(date), crps = mean(crps), forecast = "rescale", data = "weekly"),
-              by = slide
-]
+joinery(special_fore_dt, weekly_ref_dt) |> dtextract("rescale", "weekly")
 
 )
 
