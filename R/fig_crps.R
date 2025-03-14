@@ -16,7 +16,7 @@ scores[data == "daily", date := date + 6 ]
 scores[forecast != "rescale", slide := slide / 14L]
 scores[forecast == "rescale", slide := slide / 2L]
 
-slide_counts <- scores[, .N, by = .(forecast, data)][, unique(N)]
+slide_counts <- scores[forecast == "daily", .(tot = .N), by = .(data)]
 
 monthlabs <- strsplit("JFMAMJJASOND", "")[[1]]
 
@@ -29,7 +29,7 @@ yearextract <- function(dates, force = 2, showmonth = 1) {
 
 score_plt <- ggplot(data = scores) +
 	geom_line(
-	  aes(x = date, y = crps, color = forecast)
+	  aes(x = date, y = crps, color = forecast, group = interaction(slide, forecast, data))
 	) +
 	geom_blank(
 		aes(x = date, y = 10^4), data = \(dt) dt[, {
@@ -64,10 +64,11 @@ score_plt <- ggplot(data = scores) +
 scores_ref <- scores[forecast == "daily"][, .SD, .SDcols = -c("forecast")]
 
 scores_rel <- scores[forecast != "daily"][scores_ref, on = .(slide, date, data), nomatch = 0]
+scores_rel[, pos := 1:.N, by = .(data, forecast)]
 
-rel_plot <- ggplot(data = scores_rel) +
+rel_plot <- ggplot(data = scores_rel[slide_counts, on = .(data)]) +
     aes(
-    	x = as.integer(interaction(forecast, data)) - 0.25 + (slide/slide_counts)/2,
+    	x = as.integer(interaction(forecast, data)) - 0.25 + (pos/tot)/2,
     	y = crps/i.crps
     ) +
     theme_minimal() +
@@ -81,11 +82,10 @@ rel_plot <- ggplot(data = scores_rel) +
         data = \(dt) dt[,.(geomean = exp(mean(log(crps/i.crps)))), by=.(forecast, data)],
         color = "red", hjust = 1.1, fill = alpha("white", 0.9)
     ) +
-    geom_texthline(
+    geom_hline(
         mapping = aes(yintercept = yint),
         data = \(dt) dt[1, .(yint = 1)],
-        linetype = "dashed", label = "vs. daily data\n=> ... target",
-        hjust = 0
+        linetype = "dashed"
     ) +
     geom_text(aes(x = 1.25, y = ratio, label = perf), \(dt) dt[, .(ratio = c(10, 1/10), perf = c("worse", "better"))], vjust = 0.5, hjust = 0) +
     coord_cartesian(ylim = 10^c(-2.5, 4), xlim = c(1, 4.75), expand = FALSE) +
