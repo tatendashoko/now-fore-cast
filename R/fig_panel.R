@@ -119,7 +119,7 @@ diagnostics_dt <- diagnostics_dt[
 
 # Reshape the ESS per sec columns into a single column for plotting
 diagnostics_dt_long <- melt(
-    diagnostics_dt_complete,
+    diagnostics_dt,
     measure.vars = c("ess_basic", "ess_bulk", "ess_tail"),
     variable.name = "ess_type",
     value.name = "ess_value"
