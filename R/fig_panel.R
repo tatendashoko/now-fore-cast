@@ -24,7 +24,7 @@ scores <- readRDS(.args[3])
 
 # Function to read forecasts and timings and rbind
 read_bulk_and_rbind <- function(files, out_type) {
-    # Extract the forecast target
+    # Extract the forecast target labels
     forecast_targets <- gsub("^([^_]+)_([^_]+)_([^.]+)\\.rds$", "\\2", files)
     # Replace "special" with "rescale"; old name -> new name
     forecast_targets <- ifelse(forecast_targets == "special", "rescale", forecast_targets)
