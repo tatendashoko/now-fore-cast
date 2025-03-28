@@ -39,9 +39,6 @@ forecasts <- read_bulk_and_rbind(.args[4:6], "forecast")
 # Runtimes
 runtimes <- read_bulk_and_rbind(.args[4:6], "timing")
 
-# Get slide <-> date dictionary
-slide_dates_dictionary <- forecasts[type == "weekly", .SD[1], by = "slide", .SDcols = c("date")]
-
 # Diagnostics
 diagnostics_dt <- fread(.args[7])
 
