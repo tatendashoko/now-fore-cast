@@ -107,6 +107,10 @@ score_plt <-
 score_plt
 
 ### Diagnostics
+
+# Get the slides and their dates for annotating the diagnostics data
+slide_dates_dictionary <- forecasts[type == "weekly", .SD[1], by = "slide", .SDcols = c("date")]
+
 # Add the dates by slide
 diagnostics_dt <- diagnostics_dt[
     slide_dates_dictionary,
