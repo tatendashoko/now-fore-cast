@@ -58,7 +58,7 @@ is_daily <- sub("//_*", "", basename(.args[1])) == "daily"
 # Observation model
 obs <- obs_opts(
   week_effect = ifelse(is_daily, TRUE, FALSE), # turn on week effect if data is on daily scale
-  na = ifelse(is_daily, "missing", "accumulate"), # For weekly cases, accumulate NA rows; for daily, treat as missing
+  na = "accumulate", # NA in the data are followed by values that suggest they were accumulated
   likelihood = TRUE,
   return_likelihood = FALSE
 )
