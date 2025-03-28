@@ -22,6 +22,13 @@ weekly_cases <- readRDS(.args[2])
 # Scores
 scores <- readRDS(.args[3])
 # Forecasts
+
+extractor <- function(files, target) setNames(files, c("daily", "weekly", "rescale")) |>
+  lapply(readRDS) |> lapply(\(obj) rbindlist(obj[[target]])) |>
+  rbindlist(idcol = "type")
+
+forecasts <- extractor(.args[4:6], "forecast")
+runtimes <- extractor(.args[4:6], "timing")
 forecasts_daily_dt <- readRDS(.args[4])$forecast |>
     rbindlist()
 forecasts_daily_dt[, type := "daily"]
