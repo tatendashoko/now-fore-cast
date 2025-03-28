@@ -15,21 +15,13 @@ library(data.table)
 }
 
 # Get diagnostic data
-.args[1:3] |> setNames(c("daily", "weekly", "rescale")) |>
-  lapply(readRDS) |> lapply(\(obj) {
-    obj$diagnostics |> rbindlist()
-}) |> rbindlist(idcol = "type", fill = TRUE)
-
-# Create groupable data for the plots
-daily_dt$type <- "daily"
-weekly_dt$type <- "weekly"
-special_dt$type <- "rescale"
-diagnostics_dt_combined <- rbind(
-    daily_dt,
-    weekly_dt,
-    special_dt,
-    fill = TRUE
-)
+diagnostics_dt_combined <- .args[1:3] |>
+    setNames(c("daily", "weekly", "rescale")) |>
+    lapply(readRDS) |>
+    lapply(\(obj) {
+        obj$diagnostics |> rbindlist()
+    }) |>
+    rbindlist(idcol = "type", fill = TRUE)
 
 # Save as csv
 write.csv(diagnostics_dt_combined, tail(.args, 1), row.names = FALSE)
