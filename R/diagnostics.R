@@ -15,9 +15,10 @@ library(data.table)
 }
 
 # Get diagnostic data
-daily_dt <- readRDS(.args[1])$diagnostics |> rbindlist()
-weekly_dt <- readRDS(.args[2])$diagnostics |> rbindlist()
-special_dt <- readRDS(.args[3])$diagnostics |> rbindlist()
+.args[1:3] |> setNames(c("daily", "weekly", "rescale")) |>
+  lapply(readRDS) |> lapply(\(obj) {
+    obj$diagnostics |> rbindlist()
+}) |> rbindlist(idcol = "type", fill = TRUE)
 
 # Create groupable data for the plots
 daily_dt$type <- "daily"
