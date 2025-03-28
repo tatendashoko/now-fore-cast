@@ -66,7 +66,8 @@ cases_plt <- ggplot() +
 		"Daily Incidence (log10)", sec.axis = sec_axis(
 			~ . * 7, name = "Weekly Incidence (log10)"
 		)
-	)
+	) +
+    scale_x_date(NULL, date_breaks = "month", date_labels = "%b '%y")
 
 cases_plt
 
@@ -82,26 +83,23 @@ score_plt <-
     ) +
     # Now add the scores data
 	geom_line(
-	    data = scores,
+	    data = scores[, type := forecast],
 	    aes(x = date,
 	        y = crps,
-	        color = forecast
+	        color = type
 	    )
 	) +
     geom_point(
         data = scores,
         aes(x = date,
             y = crps,
-            color = forecast
+            color = type
         )
     ) +
     scale_x_date(NULL, date_breaks = "month", date_labels = "%b '%y") +
     scale_y_log10() +
     scale_color_brewer(na.translate = FALSE, palette = "Dark2") +
-    theme(
-        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
-        legend.position = "right"
-        ) +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
     facet_wrap(~data, ncol = 1, strip.position = "right") +
     labs(y = "CRPS (log10)",
          linetype = "Data",
@@ -168,19 +166,15 @@ diagnostics_plt <-
         color = "Forecast target",
         linetype = "Data"
     ) +
-    theme(
-        axis.text.x = element_text(angle = 45, hjust = 1),
-        legend.position = "right"
-    ) +
-    theme_minimal()
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 diagnostics_plt
 
 # Patchwork
-panel_fig <- (cases_plt / score_plt / diagnostics_plt) +
+panel_fig <- (cases_plt + score_plt + diagnostics_plt) &
+    plot_layout(ncol = 1, guides = "collect", axes = "collect_x") &
     plot_annotation(title = paste(daily_cases$province[1])) &
     theme_minimal() &
-    scale_x_date(NULL, date_breaks = "month", date_labels = "%b '%y") &
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) 
 
 
