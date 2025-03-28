@@ -34,21 +34,6 @@ forecasts_special_dt[, type := "rescale"]
 # Get slide <-> date dictionary
 slide_dates_dictionary <- forecasts_weekly_dt[, .SD[1], by = "slide", .SDcols = c("date")]
 
-# Run times
-# Daily
-# runtimes_daily_dt <- readRDS(.args[4])$timing |>
-#     rbindlist()
-
-# runtimes_daily_dt[, type := "daily"]
-# Weekly
-# runtimes_weekly_dt <- readRDS(.args[5])$timing |>
-#     rbindlist()
-# runtimes_weekly_dt[, type := "weekly"]
-# Rescaled weekly scale
-# runtimes_special_dt <- readRDS(.args[6])$timing |>
-#     rbindlist()
-# runtimes_special_dt[, type := "rescale"]
-
 # Diagnostics
 diagnostics_dt <- fread(.args[7])
 
@@ -121,79 +106,6 @@ score_plt
 # Daily data
 # Add dates by slide
 dates_by_slide <- scores[forecast == "daily" & data == "daily"][, .(slide, date)]
-
-# runtimes_daily_dt <- runtimes_daily_dt[
-#     dates_by_slide,
-#     on = "slide"
-# ]
-
-# Add dates by slide
-# runtimes_weekly_dt <- runtimes_weekly_dt[
-#     dates_by_slide,
-#     on = "slide"
-# ]
-
-# runtimes_special_dt <- runtimes_special_dt[
-#     dates_by_slide,
-#     on = "slide"
-# ]
-
-# Combine the daily and weekly runtimes
-# timing_dt_combined <- rbindlist(
-#     list(runtimes_daily_dt,
-#          runtimes_weekly_dt,
-#          runtimes_special_dt
-#     ),
-#     fill = TRUE
-# )
-
-# Remove slide
-# timing_dt_combined[, slide := NULL]
-
-# Round times
-# timing_dt_combined[, timing := round(lubridate::as.duration(stan_elapsed_time), 1)]
-
-# reshape the data to wide
-# timing_dt_reshaped <- timing_dt_combined |>
-#     dcast(date ~ type, value.var = "timing")
-
-# Add categorical indicator of comparison
-# timing_dt_reshaped[, relative_speed := ifelse(daily > weekly, "Daily_worse", "Weekly_worse")]
-# 
-# # Add missing dates from case data for alignment
-# timing_dt_complete <- merge(
-#     complete_dates_dt,     
-#     timing_dt_reshaped, 
-#     by = "date",  
-#     all.y = FALSE, 
-#     all.x = TRUE 
-# )
-
-# @james TODO: not sure how to think about this w/ addition of rescaled forecast
-
-## Runtimes plot
-# runtimes_plt <- ggplot() +
-# 	geom_point(data = timing_dt_combined,
-# 	    aes(x = date,
-# 	        y = timing,
-# 	        shape = type
-# 	    )
-# 	) +
-#     geom_linerange(
-#         data = timing_dt_complete,
-#         aes(x = date,
-#             ymin = daily,
-#             ymax = weekly,
-#             color = relative_speed
-#         )
-#     ) +
-#     # scale_y_continuous(sec.axis = sec_axis(~ . + 10000)) +
-#     scale_x_date(NULL, date_breaks = "month", date_labels = "%b '%y") +
-#     scale_color_brewer(na.translate = FALSE, palette = "Accent") +
-#     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-#     labs(shape = "forecast", y = "run time (secs)")
-# 
-# runtimes_plt
 
 ### Diagnostics
 # Add the dates by slide
