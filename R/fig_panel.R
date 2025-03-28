@@ -44,14 +44,9 @@ diagnostics_dt <- fread(.args[7])
 # Other data
 train_window <- 70 # This has to be the same as the one in the pipeline.R script
 
-# We'll need to align the dates in the computed data (scores and diagnostics) with those of the cases data
-# when making the panel plot so we'll get the complete dates from the daily cases data
-complete_dates_dt <- daily_cases[, .(date)]
-
 #####
 #Plots
 ####
-
 # Cases plot
 cases_plt <- ggplot() +
 	geom_point(data = daily_cases,
@@ -74,12 +69,6 @@ cases_plt
 ########## 
 # Scores
 ##########
-## Add missing dates to be able to align with the cases plot panel
-scores_complete <- merge(
-    complete_dates_dt,
-    scores, by = "date", all.x = TRUE
-)
-
 # scores plot
 score_plt <- ggplot(data = scores_complete) +
 	geom_line(
@@ -106,26 +95,12 @@ score_plt <- ggplot(data = scores_complete) +
 
 score_plt
 
-# Run times
-# Daily data
-# Add dates by slide
-dates_by_slide <- scores[forecast == "daily" & data == "daily"][, .(slide, date)]
-
 ### Diagnostics
 # Add the dates by slide
 diagnostics_dt <- diagnostics_dt[
     slide_dates_dictionary,
     on = "slide"
 ]
-
-# Add missing dates from case data for date alignment in panel plot
-diagnostics_dt_complete <- merge(
-    complete_dates_dt,     
-    diagnostics_dt, 
-    by = "date",  
-    all.y = FALSE, 
-    all.x = TRUE 
-)
 
 # Reshape the ESS per sec columns into a single column for plotting
 diagnostics_dt_long <- melt(
