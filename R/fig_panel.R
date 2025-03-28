@@ -21,25 +21,22 @@ daily_cases <- readRDS(.args[1])
 weekly_cases <- readRDS(.args[2])
 # Scores
 scores <- readRDS(.args[3])
+
+# Function to read forecasts and timings and rbind
+read_bulk_and_rbind <- function(files, out_type) {
+    setNames(files, c("daily", "weekly", "rescale")) |>
+        lapply(readRDS) |>
+        lapply(\(obj) rbindlist(obj[[out_type]])) |>
+        rbindlist(idcol = "type")
+}
+
 # Forecasts
+forecasts <- read_bulk_and_rbind(.args[4:6], "forecast")
+# Runtimes
+runtimes <- read_bulk_and_rbind(.args[4:6], "timing")
 
-extractor <- function(files, target) setNames(files, c("daily", "weekly", "rescale")) |>
-  lapply(readRDS) |> lapply(\(obj) rbindlist(obj[[target]])) |>
-  rbindlist(idcol = "type")
-
-forecasts <- extractor(.args[4:6], "forecast")
-runtimes <- extractor(.args[4:6], "timing")
-forecasts_daily_dt <- readRDS(.args[4])$forecast |>
-    rbindlist()
-forecasts_daily_dt[, type := "daily"]
-forecasts_weekly_dt <- readRDS(.args[5])$forecast |>
-    rbindlist()
-forecasts_weekly_dt[, type := "weekly"]
-forecasts_special_dt <- readRDS(.args[6])$forecast |>
-    rbindlist()
-forecasts_special_dt[, type := "rescale"]
 # Get slide <-> date dictionary
-slide_dates_dictionary <- forecasts_weekly_dt[, .SD[1], by = "slide", .SDcols = c("date")]
+slide_dates_dictionary <- forecasts[type == "weekly", .SD[1], by = "slide", .SDcols = c("date")]
 
 # Diagnostics
 diagnostics_dt <- fread(.args[7])
