@@ -15,8 +15,14 @@ library(data.table)
 }
 
 # Get diagnostic data
-diagnostics_dt_combined <- .args[1:3] |>
-    setNames(c("daily", "weekly", "rescale")) |>
+files <- .args[1:3]
+# Extract the forecast target
+targets_labels <- gsub("^([^_]+)_([^_]+)_([^.]+)\\.rds$", "\\2", files)
+# Replace "special" with "rescale"; old name -> new name
+target_labels <- ifelse(targets_labels == "special", "rescale", targets_labels)
+
+diagnostics_dt_combined <- files |>
+    setNames(target_labels) |>
     lapply(readRDS) |>
     lapply(\(obj) {
         obj$diagnostics |> rbindlist()
