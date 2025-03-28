@@ -70,14 +70,22 @@ cases_plt
 # Scores
 ##########
 # scores plot
-score_plt <- ggplot(data = scores_complete) +
+score_plt <-
+    # First make a layer with all dates present
+    ggplot(data = daily_cases) +
+    geom_blank(
+        aes(x = date, y = max(confirm))
+    ) +
+    # Now add the scores data
 	geom_line(
+	    data = scores,
 	    aes(x = date,
 	        y = crps,
 	        color = forecast
 	    )
 	) +
     geom_point(
+        data = scores,
         aes(x = date,
             y = crps,
             color = forecast
@@ -86,7 +94,10 @@ score_plt <- ggplot(data = scores_complete) +
     scale_x_date(NULL, date_breaks = "month", date_labels = "%b '%y") +
     scale_y_log10() +
     scale_color_brewer(na.translate = FALSE, palette = "Dark2") +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+    theme(
+        axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+        legend.position = "right"
+        ) +
     facet_wrap(~data, ncol = 1, strip.position = "right") +
     labs(y = "CRPS (log10)",
          linetype = "Data",
@@ -118,14 +129,27 @@ diagnostics_dt_long[, ess_per_sec := ess_value/stan_elapsed_time]
 
 # Plot
 diagnostics_plt <-
-    ggplot(diagnostics_dt_long[ess_type == "ess_tail"], # Only plotting ESS tail
-           aes(x = date,
-               y = ess_per_sec,
-               color = type
-           )
+    # First make a layer with all dates present
+    ggplot(data = daily_cases) +
+    geom_blank(
+        aes(x = date, y = max(confirm))
     ) +
-    geom_line() +
-    geom_point(size = 1, aes(color = type)) +
+    # Now add the diagnostics data
+    geom_line(
+        data = diagnostics_dt_long[ess_type == "ess_tail"], # Only plotting ESS tail
+        aes(x = date,
+            y = ess_per_sec,
+            color = type
+        )
+    ) +
+    geom_point(
+        data = diagnostics_dt_long[ess_type == "ess_tail"], # Only plotting ESS tail
+        aes(x = date,
+            y = ess_per_sec,
+            color = type
+        ),
+        size = 1
+    ) +
     scale_y_log10() +
     scale_x_date(NULL, date_breaks = "month", date_labels = "%b '%y") +
     scale_color_brewer(na.translate = FALSE, palette = "Dark2") +
