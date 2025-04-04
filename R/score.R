@@ -24,7 +24,7 @@ dtextract <- function(dt, fct, dat) dt[,
 	by = slide
 ]
 
-joinery <- function(fore_dt, ref_dt) fore_dt[
+join_and_score <- function(fore_dt, ref_dt) fore_dt[
 	ref_dt, on = .(date), .(sample, slide, date, prediction, true_value),
 	nomatch = 0
 ][,
@@ -39,19 +39,19 @@ joinery <- function(fore_dt, ref_dt) fore_dt[
 
 score_dt <- rbind(
 # daily forecast vs daily data
-joinery(daily_fore_dt, daily_ref_dt) |> dtextract("daily", "daily"),
+join_and_score(daily_fore_dt, daily_ref_dt) |> dtextract("daily", "daily"),
 
 # daily forecasts vs weekly data
-joinery(daily_fore_dt, weekly_ref_dt) |> dtextract("daily", "weekly"),
+join_and_score(daily_fore_dt, weekly_ref_dt) |> dtextract("daily", "weekly"),
 
 # weekly forecasts vs daily data
-joinery(weekly_fore_dt, daily_ref_dt) |> dtextract("weekly", "daily"),
+join_and_score(weekly_fore_dt, daily_ref_dt) |> dtextract("weekly", "daily"),
 
 # weekly forecasts vs weekly data
-joinery(weekly_fore_dt, weekly_ref_dt) |> dtextract("weekly", "weekly"),
+join_and_score(weekly_fore_dt, weekly_ref_dt) |> dtextract("weekly", "weekly"),
 
 # weekly-scale forecasts vs weekly data
-joinery(special_fore_dt, weekly_ref_dt) |> dtextract("rescale", "weekly")
+join_and_score(special_fore_dt, weekly_ref_dt) |> dtextract("rescale", "weekly")
 
 )
 
