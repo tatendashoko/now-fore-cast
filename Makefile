@@ -1,5 +1,9 @@
 
-default: allscores
+default: endrule
+
+# when testing pipeline, single province target to make
+# to override, can provide `ONEPROV=WC` (for example) at end of `make sometarget` invocation
+ONEPROV ?= GP
 
 # see example.makefile for notes on how to make this
 #-include local.makefile
@@ -74,7 +78,7 @@ ${FIGDIR}/incidence.png: R/fig_incidence.R ${DATDIR}/intermediate.rds | ${FIGDIR
 ${FIGDIR}/daily_vs_weekly_%.png: R/fig_daily_vs_weekly.R ${DATDIR}/daily_%.rds ${DATDIR}/weekly_%.rds | ${FIGDIR}
 	$(call R)
 	
-${FIGDIR}/benchmarks_%.png: R/fig_timing.R ${OUTDIR}/forecast_daily_%.rds ${OUTDIR}/forecast_weekly_%.rds ${OUTDIR}/forecast_special_%.rds | ${FIGDIR}
+${FIGDIR}/benchmarks_%.png: R/fig_timing.R ${OUTDIR}/forecast_daily_%.rds ${OUTDIR}/forecast_weekly_%.rds ${OUTDIR}/forecast_rescale_%.rds | ${FIGDIR}
 	$(call R)
 
 ${FIGDIR}/fig_panel_%.png: \
@@ -84,7 +88,7 @@ ${FIGDIR}/fig_panel_%.png: \
 	${OUTDIR}/score_%.rds \
 	${OUTDIR}/forecast_daily_%.rds \
 	${OUTDIR}/forecast_weekly_%.rds \
-	${OUTDIR}/forecast_special_%.rds \
+	${OUTDIR}/forecast_rescale_%.rds \
 	${OUTDIR}/diagnostics_%.csv | ${FIGDIR}
 	$(call R)
 
@@ -99,22 +103,32 @@ allpanelfigs: $(patsubst %,${FIGDIR}/fig_panel_%.png,${PROVINCES})
 
 allscorescatterfigs: $(patsubst %,${FIGDIR}/score_scatter_%.png,${PROVINCES})
 
-${OUTDIR}/forecast_%.rds: R/pipeline.R ${DATDIR}/%.rds | ${OUTDIR}
+# pattern = some province
+DAILYDAT_PAT = ${DATDIR}/daily_%.rds
+WEEKLYDAT_PAT = ${DATDIR}/weekly_%.rds
+# pattern = province_(daily|weekly|rescale)
+FORECAST_PAT = ${OUTDIR}/forecast_%.rds
+
+${FORECAST_PAT}: R/pipeline.R ${DATDIR}/%.rds | ${OUTDIR}
 	$(call R)
 
-${OUTDIR}/forecast_special_%.rds: R/special_pipe.R ${DATDIR}/weekly_%.rds | ${OUTDIR}
+${OUTDIR}/forecast_rescale_%.rds: R/rescale_pipe.R ${DATDIR}/weekly_%.rds | ${OUTDIR}
 	$(call R)
 
-${OUTDIR}/score_%.rds: R/score.R ${DATDIR}/daily_%.rds ${DATDIR}/weekly_%.rds ${OUTDIR}/forecast_daily_%.rds ${OUTDIR}/forecast_weekly_%.rds ${OUTDIR}/forecast_special_%.rds
+${OUTDIR}/score_%.rds: R/score.R ${DATDIR}/daily_%.rds ${DATDIR}/weekly_%.rds ${OUTDIR}/forecast_daily_%.rds ${OUTDIR}/forecast_weekly_%.rds ${OUTDIR}/forecast_rescale_%.rds
 	$(call R)
 
-${OUTDIR}/diagnostics_%.csv: R/diagnostics.R ${OUTDIR}/forecast_daily_%.rds ${OUTDIR}/forecast_weekly_%.rds ${OUTDIR}/forecast_special_%.rds
+${OUTDIR}/diagnostics_%.csv: R/diagnostics.R ${OUTDIR}/forecast_daily_%.rds ${OUTDIR}/forecast_weekly_%.rds ${OUTDIR}/forecast_rescale_%.rds
 	$(call R)
 
 alldiagnostics: $(patsubst %,${OUTDIR}/diagnostics_%.csv,${PROVINCES})
 
-allforecasts: $(patsubst %,${OUTDIR}/forecast_daily_%.rds,${PROVINCES} RSA) $(patsubst %,${OUTDIR}/forecast_weekly_%.rds,${PROVINCES} RSA) $(patsubst %,${OUTDIR}/forecast_special_%.rds,${PROVINCES} RSA)
+allforecasts: $(patsubst %,${OUTDIR}/forecast_daily_%.rds,${PROVINCES} RSA) $(patsubst %,${OUTDIR}/forecast_weekly_%.rds,${PROVINCES} RSA) $(patsubst %,${OUTDIR}/forecast_rescale_%.rds,${PROVINCES} RSA)
 allscores: $(patsubst %,${OUTDIR}/score_%.rds,${PROVINCES} RSA)
 
 # Main target
 allpanelfigs: $(patsubst %,${FIGDIR}/fig_panel_%.png,${PROVINCES})
+
+test: $(patsubst %,${OUTDIR}/forecast_daily_%.rds,${ONEPROV}) $(patsubst %,${OUTDIR}/forecast_weekly_%.rds,${ONEPROV}) $(patsubst %,${OUTDIR}/forecast_rescale_%.rds,${ONEPROV})
+
+endrule: allscores
