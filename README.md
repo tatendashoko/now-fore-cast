@@ -1,5 +1,8 @@
 # Consequences of Reporting Frequency & Spatial Aggregation for Forecasting Performance
 
+> [!NOTE]  
+> This repo is no longer being updated. Find the latest changes [here](https://github.com/jamesmbaazam/daily-vs-weekly-forecast-eval).
+
 In the case of COVID-19 infection incidence in South Africa, based on provincial reporting.
 
 ## Background
