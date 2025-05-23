@@ -3,8 +3,6 @@
 > [!NOTE]  
 > This repo is no longer being updated. Find the latest changes [here](https://github.com/jamesmbaazam/daily-vs-weekly-forecast-eval).
 
-In the case of COVID-19 infection incidence in South Africa, based on provincial reporting.
-
 ## Background
 
 The COVID-19 pandemic highlighted the possibility of infectious disease forecasting, with widespread production and consumption of forecasts of cases, hospitalization, and deaths. Notionally, these forecasts informed decisions by individuals, businesses, and public health policy makers and operations. Given their popularity, we expect these methods to be used again in future epidemic and pandemics.
