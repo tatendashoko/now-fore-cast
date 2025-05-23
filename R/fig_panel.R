@@ -31,7 +31,7 @@ read_bulk_and_rbind <- function(files, out_type) {
     setNames(files, forecast_targets) |> # Must always make sure the inputs are in that order 
         lapply(readRDS) |>
         lapply(\(obj) rbindlist(obj[[out_type]])) |>
-        rbindlist(idcol = "type")
+        rbindlist(idcol = "type", fill = TRUE)
 }
 
 # Forecasts

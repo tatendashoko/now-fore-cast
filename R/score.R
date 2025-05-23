@@ -32,7 +32,15 @@ join_and_score <- function(fore_dt, ref_dt) fore_dt[
 ][!is.na(true_value),
 	.(date, prediction = c(csum[1], diff(csum)), true_value),
 	by = .(sample, slide)
-] |> score(metrics = "crps")
+][,
+  `:=`(predicted = prediction, observed = true_value)
+] |>
+    as_forecast_sample(
+        predicted = "prediction",
+        observed = "true_value",
+        sample_id = "sample"
+    ) |>
+    score()
 
 # wherever the true value is NA, we are assuming the prediction should be
 # accumulated to wherever the next observation occurs
