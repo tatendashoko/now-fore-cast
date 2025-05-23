@@ -52,7 +52,6 @@ rt_prior <- LogNormal(meanlog = 0.69, sdlog = 0.05) # mean = 2, sd = 0.1
 # Observation model
 obs <- obs_opts(
   week_effect = FALSE,
-  na = "missing", # shouldn't matter for this case
   likelihood = TRUE,
   return_likelihood = FALSE
 )
