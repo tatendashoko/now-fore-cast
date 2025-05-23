@@ -4,13 +4,14 @@ library(data.table)
 library(parallel)
 library(bayesplot)
 
-.scale <- "weekly"
-.prov <- "GP"
-
-.args <- if (interactive()) sprintf(file.path(
-  "local", c("data", "output"),
-  c("%s_%s.rds", "forecast_%s_%s.rds")
-), .scale, .prov) else commandArgs(trailingOnly = TRUE)
+.args <- if (interactive()) {
+	.scale <- "weekly"
+	.prov <- "GP"
+	sprintf(file.path(
+		"local", c("data", "output"),
+  		c("%s_%s.rds", "forecast_%s_%s.rds")
+	), .scale, .prov)
+} else commandArgs(trailingOnly = TRUE)
 
 # inflate as.Date, because EpiNow2 seems to prefer Date over IDate
 dt <- readRDS(.args[1])[, .(date = as.Date(date), confirm)]
@@ -179,9 +180,10 @@ res_dt <- lapply(slides, \(slide) {
 
 			# Extract the diagnostic information
 			diagnostics <- get_rstan_diagnostics(out$estimates$fit)
-			stan_elapsed_time <- stan_elapsed_time + sum(
+			last_run_time <- sum(
 				rstan::get_elapsed_time(out$estimates$fit)
 			)
+			stan_elapsed_time <- stan_elapsed_time + last_run_time
 			crude_run_time <- crude_run_time + out$timing
 			next_stan <- ratchet_control(next_stan)
 
@@ -204,24 +206,26 @@ res_dt <- lapply(slides, \(slide) {
 		            slide = slide,
 		            crude_run_time = crude_run_time,
 		            stan_elapsed_time = stan_elapsed_time,
+					keep_run_time = last_run_time,
 					ratchets = ratchets
 		        )
 		    ),
 		    diagnostics = list(diagnostics),
 		    fit = ifelse(stan_elapsed_time < lubridate::duration(3), list(out$estimates$fit), list(NA)) # Only save the fit if the runtime is less than specified secs (for memory reasons; the fits are massive = 27 Gb ish)
 		)
-		return(res_dt)
+		res_dt
 	} else {
 		empty_forecast <- data.table(
 			date = dt[train_window + slide, date + seq_len(test_window)],
 			sample = NA_integer_, value = NA_integer_, slide = slide
 		)
-		return(data.table(
+		data.table(
 			forecast = list(empty_forecast),
 			timing = list(data.table(
 			    slide = slide,
 			    crude_run_time = lubridate::as.duration(NA),
 			    stan_elapsed_time = lubridate::as.duration(NA),
+				keep_run_time = lubridate::as.duration(NA),
 				ratchets = NA_integer_
 			)),
 			diagnostics = list(data.table(
@@ -239,7 +243,7 @@ res_dt <- lapply(slides, \(slide) {
 				"stan_elapsed_time" = NA
 			)),
 			fit = list(NA)
-		))
+		)
 	}
 })
 
